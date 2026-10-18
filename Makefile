@@ -23,10 +23,11 @@ $(BUILD)/SteadyWiFiBar: Sources/SteadyWiFiBar/main.swift $(BUILD)/libSteadyWiFiC
 	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lSteadyWiFiCore -o $@ $<
 
 # The CLI ships inside the app. Ad-hoc signed, CLI first since codesign wants nested code signed.
-$(APP): $(BUILD)/SteadyWiFiBar $(BUILD)/steadywifi Resources/Info.plist
+$(APP): $(BUILD)/SteadyWiFiBar $(BUILD)/steadywifi Resources/Info.plist $(wildcard Resources/*.lproj/*)
 	rm -r -f $@
-	mkdir -p $@/Contents/MacOS
+	mkdir -p $@/Contents/MacOS $@/Contents/Resources
 	cp $(BUILD)/SteadyWiFiBar $(BUILD)/steadywifi $@/Contents/MacOS/
+	cp -R Resources/*.lproj $@/Contents/Resources/
 	sed 's/__VERSION__/$(VERSION)/' Resources/Info.plist > $@/Contents/Info.plist
 	codesign --force --sign - $@/Contents/MacOS/steadywifi
 	codesign --force --sign - $@
