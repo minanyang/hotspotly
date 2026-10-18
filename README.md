@@ -1,8 +1,16 @@
+<div align="center">
+
 # Steady WiFi
 
-**English** · [繁體中文](README.zh-TW.md)
-
 Keeps your Mac steady on your phone's hotspot and on Wi-Fi.
+
+[![Release](https://img.shields.io/github/v/release/minanyang/steady-wifi)](https://github.com/minanyang/steady-wifi/releases/latest)
+![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+**English** · [繁體中文](README.zh-TW.md) · [Download](https://github.com/minanyang/steady-wifi/releases/latest/download/SteadyWiFi.zip)
+
+</div>
 
 Macs drop off phone hotspots, iPhone or Android, for a few reasons that pile up. The first and
 last also hit regular Wi-Fi:

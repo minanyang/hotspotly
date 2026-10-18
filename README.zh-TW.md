@@ -1,8 +1,16 @@
+<div align="center">
+
 # Steady WiFi
 
-[English](README.md) · **繁體中文**
-
 讓 Mac 穩穩連在手機熱點和 Wi-Fi 上。
+
+[![Release](https://img.shields.io/github/v/release/minanyang/steady-wifi)](https://github.com/minanyang/steady-wifi/releases/latest)
+![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+[English](README.md) · **繁體中文** · [下載](https://github.com/minanyang/steady-wifi/releases/latest/download/SteadyWiFi.zip)
+
+</div>
 
 Mac 連手機熱點（iPhone 或 Android）容易斷線，原因通常不只一個。其中第一個和第三個在一般 Wi-Fi 上也會發生：
 
