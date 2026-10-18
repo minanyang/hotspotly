@@ -10,6 +10,8 @@
 	<string>Hotspotly</string>
 	<key>CFBundleDisplayName</key>
 	<string>Hotspotly</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleExecutable</key>
 	<string>HotspotlyBar</string>
 	<key>CFBundlePackageType</key>

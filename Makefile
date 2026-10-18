@@ -23,11 +23,12 @@ $(BUILD)/HotspotlyBar: Sources/HotspotlyBar/main.swift $(BUILD)/libHotspotlyCore
 	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $<
 
 # The CLI ships inside the app. Ad-hoc signed, CLI first since codesign wants nested code signed.
-$(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly Resources/Info.plist $(wildcard Resources/*.lproj/*)
+$(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly Resources/Info.plist $(wildcard Resources/*.lproj/*) \
+		Resources/AppIcon.icns $(wildcard Resources/*.pdf)
 	rm -r -f $@
 	mkdir -p $@/Contents/MacOS $@/Contents/Resources
 	cp $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $@/Contents/MacOS/
-	cp -R Resources/*.lproj $@/Contents/Resources/
+	cp -R Resources/*.lproj Resources/AppIcon.icns Resources/*.pdf $@/Contents/Resources/
 	sed 's/__VERSION__/$(VERSION)/' Resources/Info.plist > $@/Contents/Info.plist
 	codesign --force --sign - $@/Contents/MacOS/hotspotly
 	codesign --force --sign - $@
@@ -45,7 +46,13 @@ $(ZIP): $(APP)
 
 zip: $(ZIP)
 
+# Redraws the logo into the app icon, menu bar icons and README image; the outputs are committed.
+icons:
+	@mkdir -p $(BUILD)
+	swiftc -o $(BUILD)/make-icons scripts/make-icons.swift
+	$(BUILD)/make-icons .
+
 clean:
 	rm -r -f $(BUILD)
 
-.PHONY: all app install zip clean
+.PHONY: all app install zip icons clean

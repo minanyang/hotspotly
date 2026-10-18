@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/icon.png" width="128" alt="Hotspotly 圖示">
+
 # Hotspotly
 
 讓 Mac 穩穩連在手機熱點和 Wi-Fi 上。
@@ -30,9 +32,9 @@ Hotspotly 是一個選單列 app，每 10 秒會做這些事：
 
 1. 下載 [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip)，解壓縮後把 **Hotspotly** 拖進「應用程式」。
 2. 打開它。Hotspotly 目前沒有經過 Apple 公證，所以第一次打開時 macOS 會擋下來：到「**系統設定 → 隱私權與安全性**」，捲到最下面，按「**仍要打開**」。
-3. 出現「完成設定」的詢問時按 **Continue**，輸入你的密碼（原因見[權限](#權限)）。
+3. 出現「完成 Hotspotly 的設定」的詢問時按「**繼續**」，輸入你的密碼（原因見[權限](#權限)）。
 4. 詢問位置權限時按「允許」，選單才能顯示網路名稱。
-5. 在選單裡打開 **Open at Login**（登入時開啟）。
+5. 在選單裡打開「**設定 → 登入時開啟**」。
 
 熟悉終端機的話，也可以用一行指令安裝（不會遇到第 2 步的安全性警告）：
 
@@ -53,17 +55,18 @@ open /Applications/Hotspotly.app
 
 ## 使用方式
 
-所有操作都在選單列圖示的選單裡：
+所有操作都在選單列圖示的選單裡：連著熱點時，選單列圖示的路由器機身會變成實心；暫停或沒在執行時，圖示旁會出現小標記。選單會跟著系統語言顯示繁體中文或英文。
 
 | 選項 | 作用 |
 | --- | --- |
-| **Pause / Resume** | 暫停或恢復所有功能 |
-| **Turn Off AWDL on Hotspots** | 預設開啟。關掉後，在熱點上也能照常用 AirDrop、通用控制等功能；keepalive 和釘選網路照常運作 |
-| **Allow AirDrop for 10 Minutes** | 讓 AWDL 開著 10 分鐘，時間到再關掉。選單會顯示剩下的時間，也可以提早結束 |
-| **Pin Network** | 選一個連過的網路，讓 Mac 一直待在上面。第一次會詢問那個網路的 Wi-Fi 密碼 |
-| **Current Network Is a Hotspot** | 給 Android 手機或行動網卡用。iPhone 熱點會自動偵測 |
-| **Open at Login** | 登入時自動開啟 Hotspotly |
-| **Install Command Line Tool…** | 選用，見[命令列](#命令列) |
+| **Hotspotly** 開關 | 關閉或重新開啟所有功能 |
+| 狀態列 | 目前的網路、是不是熱點、AWDL 的狀態，以及是否在釘選的網路上 |
+| **允許 AirDrop 10 分鐘** | 連著熱點時，讓 AWDL 開著 10 分鐘，時間到再關掉。選單會顯示剩下的時間，也可以提早結束 |
+| **釘選網路** | 選一個網路讓 Mac 一直待在上面：目前的網路、附近記住的網路，或其他記住的網路。第一次會詢問那個網路的 Wi-Fi 密碼 |
+| **設定 → 在熱點上關閉 AWDL** | 預設開啟。關掉後，在熱點上也能照常用 AirDrop、通用控制等功能；keepalive 和釘選網路照常運作 |
+| **設定 → 目前的網路是熱點** | 給 Android 手機或行動網卡用。iPhone 熱點會自動偵測 |
+| **設定 → 登入時開啟** | 登入時自動開啟 Hotspotly |
+| **設定 → 安裝命令列工具…** | 選用，見[命令列](#命令列) |
 
 **釘選網路。** 釘選的網路是用閘道的 MAC 位址來辨認的。釘選時會切換過去一次，第一次會問你密碼：macOS 不讓其他 app 使用它存在系統鑰匙圈裡的 Wi-Fi 密碼，所以 Hotspotly 會在你的登入鑰匙圈另存一份，而且只在連線成功後才存。如果連線失敗，就不會釘選，macOS 會自動連回它偏好的網路。
 
@@ -71,7 +74,7 @@ Mac 離開釘選的網路後，Hotspotly 會先等一分鐘，之後最多每分
 
 結束 Hotspotly 後，以上功能都會停止，AWDL 也會重新打開。
 
-Log 檔在 `~/Library/Logs/hotspotly.log`（選單裡的 **Open Log**）。
+Log 檔在 `~/Library/Logs/hotspotly.log`（選單裡的「**設定 → 打開記錄檔**」）。
 
 ## 什麼是 AWDL？
 
@@ -79,13 +82,13 @@ AWDL（Apple Wireless Direct Link）是 Apple 裝置之間不經過路由器、�
 
 Mac 只有一組 Wi-Fi 無線電，AWDL 和你的 Wi-Fi 連線要共用。AWDL 每秒會好幾次把無線電切到它自己的頻道（通常是 6、44 或 149），去找附近的 Apple 裝置。切走的那段時間，Mac 收不到你網路的封包，於是延遲突然變高、掉封包。家裡的路由器比較能容忍這種情況；手機熱點的無線電比較弱、省電機制比較積極，手機本身也在跑 AWDL，所以常常直接斷線。
 
-關掉 AWDL 就能解決這個問題，但在打開之前，AirDrop、通用控制、隨航這些功能都不能用。所以 Hotspotly 只在你連著熱點時才關掉它，需要時可以用 **Allow AirDrop for 10 Minutes** 暫時打開，或取消勾選 **Turn Off AWDL on Hotspots** 讓它一直開著。只要有這些功能需要 AWDL，macOS 就會把它重新打開，所以 Hotspotly 會一直盯著，一被打開就在幾毫秒內關掉。
+關掉 AWDL 就能解決這個問題，但在打開之前，AirDrop、通用控制、隨航這些功能都不能用。所以 Hotspotly 只在你連著熱點時才關掉它，需要時可以用 「**允許 AirDrop 10 分鐘**」暫時打開，或取消勾選「**設定 → 在熱點上關閉 AWDL**」 讓它一直開著。只要有這些功能需要 AWDL，macOS 就會把它重新打開，所以 Hotspotly 會一直盯著，一被打開就在幾毫秒內關掉。
 
 想自己看它的狀態：執行 `ifconfig awdl0`，開著的時候會顯示 `<UP,…>`。
 
 ## 命令列
 
-app 裡附帶一個 `hotspotly` 指令。在選單點 **Install Command Line Tool…**，就會把它連結到 `/usr/local/bin/hotspotly`；也可以自己建立連結：
+app 裡附帶一個 `hotspotly` 指令。在選單點「**設定 → 安裝命令列工具…**」，就會把它連結到 `/usr/local/bin/hotspotly`；也可以自己建立連結：
 
 ```sh
 sudo ln -s /Applications/Hotspotly.app/Contents/MacOS/hotspotly /usr/local/bin/hotspotly
@@ -111,13 +114,13 @@ hotspotly run                    不開 app，在前景執行背景迴圈（開�
 
 ## 權限
 
-- **設定時輸入一次管理員密碼。** 關掉 AWDL 需要 root 權限。Hotspotly 不會用 root 執行任何程式，而是在設定時加入 `/etc/sudoers.d/hotspotly`，讓你的帳號可以不用密碼執行兩個指令，而且只有這兩個：`/sbin/ifconfig awdl0 down` 和 `/sbin/ifconfig awdl0 up`。如果跳過這一步，keepalive 和釘選網路照常能用，選單會一直顯示 **Finish Setup…**，直到你完成設定，或取消勾選 **Turn Off AWDL on Hotspots**。
+- **設定時輸入一次管理員密碼。** 關掉 AWDL 需要 root 權限。Hotspotly 不會用 root 執行任何程式，而是在設定時加入 `/etc/sudoers.d/hotspotly`，讓你的帳號可以不用密碼執行兩個指令，而且只有這兩個：`/sbin/ifconfig awdl0 down` 和 `/sbin/ifconfig awdl0 up`。如果跳過這一步，keepalive 和釘選網路照常能用，選單會一直顯示「**完成設定…**」，直到你完成設定，或取消勾選「**設定 → 在熱點上關閉 AWDL**」。
 - **位置（選用）。** macOS 不讓沒有位置權限的 app 讀取 Wi-Fi 名稱。允許後，選單會顯示目前的網路名稱；不允許也不影響功能，因為 Hotspotly 是用閘道的 MAC 位址來辨認網路，macOS 不會隱藏這個資訊。它不會讀取你的位置。
 - **登入鑰匙圈。** 你透過 Hotspotly 釘選的網路密碼，存在 `io.github.minanyang.hotspotly` 底下。
 
 ## 移除
 
-在選單選 **Uninstall Hotspotly…**，它會移除 sudoers 規則、命令列工具的連結和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。
+在選單選「**設定 → 解除安裝 Hotspotly…**」，它會移除 sudoers 規則、命令列工具的連結和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。
 
 設定檔在 `~/Library/Application Support/hotspotly`。
 

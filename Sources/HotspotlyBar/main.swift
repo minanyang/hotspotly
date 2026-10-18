@@ -146,7 +146,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func refreshIcon() {
         let config = Store.loadConfig()
         let status = Store.loadStatus()
-        // A router, so it is not mistaken for the system Wi-Fi or hotspot icon next to it.
+        // The Hotspotly router, which is easy to tell apart from the system Wi-Fi icon next to it.
         let image: NSImage
         if status == nil || status!.isStale {
             image = routerIcon(badge: "exclamationmark.circle.fill")
@@ -160,11 +160,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func routerIcon(filled: Bool = false, badge: String? = nil) -> NSImage {
-        let pointSize: CGFloat = 14
-        let router = NSImage(systemSymbolName: filled ? "wifi.router.fill" : "wifi.router", accessibilityDescription: "Hotspotly")!
-            .withSymbolConfiguration(.init(pointSize: pointSize, weight: .regular))!
+        // Drawn by scripts/make-icons.swift; a copy, since the bundle hands out one shared instance.
+        let router = Bundle.main.image(forResource: filled ? "MenuBarIconFilled" : "MenuBarIcon")!.copy() as! NSImage
+        router.size = NSSize(width: 20, height: 20)
+        router.accessibilityDescription = "Hotspotly"
         guard let badge, let mark = NSImage(systemSymbolName: badge, accessibilityDescription: nil)?
-            .withSymbolConfiguration(.init(pointSize: pointSize * 0.7, weight: .semibold)) else { return router }
+            .withSymbolConfiguration(.init(pointSize: 10, weight: .semibold)) else { return router }
         // The badge sits on the bottom-right corner, cut out of the router so it stays legible.
         let lift = mark.size.height * 0.25
         let size = NSSize(width: router.size.width + mark.size.width * 0.35, height: router.size.height + lift)
