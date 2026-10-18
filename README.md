@@ -16,7 +16,8 @@ Macs drop off phone hotspots, iPhone or Android, for a few reasons that pile up.
 last also hit regular Wi-Fi:
 
 - **AWDL** (the radio link behind AirDrop, Handoff, Universal Control and Sidecar) keeps hopping
-  the Wi-Fi chip to other channels, which shows up as latency spikes and disconnects.
+  the Wi-Fi chip to other channels, which shows up as latency spikes and disconnects. See
+  [What is AWDL?](#what-is-awdl)
 - **Idle hotspots shut down.** A phone stops advertising its hotspot once nothing has used it for
   a while.
 - **macOS wanders off** to another remembered network nearby, often another hotspot.
@@ -93,6 +94,25 @@ cannot.
 Quitting Steady WiFi stops all of this and turns AWDL back on.
 
 The log is at `~/Library/Logs/steadywifi.log` (**Open Log** in the menu).
+
+## What is AWDL?
+
+AWDL (Apple Wireless Direct Link) is how Apple devices talk to each other directly over Wi-Fi,
+without a router. On a Mac it is the `awdl0` network interface. AirDrop, AirPlay to nearby
+devices, Handoff, Universal Control, Sidecar and Continuity Camera use it.
+
+A Mac has one Wi-Fi radio, so AWDL and your Wi-Fi connection share it. Several times a second,
+AWDL takes the radio away to its own channel (usually channel 6, 44 or 149) to look for nearby
+Apple devices. While it is away, the Mac misses packets from your network, which shows up as
+latency spikes and dropped packets. A home router copes with this fairly well; a phone hotspot,
+with a weaker radio, aggressive power saving and AWDL of its own, often drops the connection.
+
+Turning AWDL off fixes this, but AirDrop, Universal Control, Sidecar and the like stop working
+until it is back on. That is why Steady WiFi turns it off only while you are on a hotspot, and why
+**Pause** brings it back. macOS turns AWDL back on whenever one of those features asks for it,
+so Steady WiFi checks every 10 seconds.
+
+To see its state yourself: `ifconfig awdl0` shows `<UP,…>` when it is on.
 
 ## Command line
 
