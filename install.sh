@@ -1,9 +1,9 @@
 #!/bin/bash
 # Installs the latest SteadyWiFi.app from GitHub Releases:
-#   curl -fsSL https://raw.githubusercontent.com/minanyang/steadywifi/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/minanyang/steady-wifi/main/install.sh | bash
 set -euo pipefail
 
-REPO=${REPO:-minanyang/steadywifi}
+REPO=${REPO:-minanyang/steady-wifi}
 DEST=/Applications
 [ -w "$DEST" ] || DEST="$HOME/Applications"
 mkdir -p "$DEST"

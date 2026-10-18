@@ -24,7 +24,7 @@ Steady WiFi is a menu bar app that, every 10 seconds:
 
 Requires macOS 13 (Ventura) or later.
 
-1. Download [SteadyWiFi.zip](https://github.com/minanyang/steadywifi/releases/latest/download/SteadyWiFi.zip),
+1. Download [SteadyWiFi.zip](https://github.com/minanyang/steady-wifi/releases/latest/download/SteadyWiFi.zip),
    unzip it and drag **SteadyWiFi** to Applications.
 2. Open it. Steady WiFi is not notarized yet, so macOS blocks it the first time: open
    **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
@@ -36,7 +36,7 @@ Requires macOS 13 (Ventura) or later.
 Or, from a terminal (skips the Gatekeeper step):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/minanyang/steadywifi/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/minanyang/steady-wifi/main/install.sh | bash
 ```
 
 Or with Homebrew:
@@ -50,8 +50,8 @@ brew install --cask minanyang/tap/steadywifi
 Requires the Xcode Command Line Tools.
 
 ```sh
-git clone https://github.com/minanyang/steadywifi
-cd steadywifi
+git clone https://github.com/minanyang/steady-wifi
+cd steady-wifi
 make install          # builds SteadyWiFi.app into /Applications
 open /Applications/SteadyWiFi.app
 ```

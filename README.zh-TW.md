@@ -20,7 +20,7 @@ Steady WiFi 是一個選單列 app，每 10 秒會做這些事：
 
 需要 macOS 13（Ventura）或更新版本。
 
-1. 下載 [SteadyWiFi.zip](https://github.com/minanyang/steadywifi/releases/latest/download/SteadyWiFi.zip)，解壓縮後把 **SteadyWiFi** 拖進「應用程式」。
+1. 下載 [SteadyWiFi.zip](https://github.com/minanyang/steady-wifi/releases/latest/download/SteadyWiFi.zip)，解壓縮後把 **SteadyWiFi** 拖進「應用程式」。
 2. 打開它。Steady WiFi 目前沒有經過 Apple 公證，所以第一次打開時 macOS 會擋下來：到「**系統設定 → 隱私權與安全性**」，捲到最下面，按「**仍要打開**」。
 3. 出現「完成設定」的詢問時按 **Continue**，輸入你的密碼（原因見[權限](#權限)）。
 4. 詢問位置權限時按「允許」，選單才能顯示網路名稱。
@@ -29,7 +29,7 @@ Steady WiFi 是一個選單列 app，每 10 秒會做這些事：
 熟悉終端機的話，也可以用一行指令安裝（不會遇到第 2 步的安全性警告）：
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/minanyang/steadywifi/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/minanyang/steady-wifi/main/install.sh | bash
 ```
 
 或是用 Homebrew：
@@ -43,8 +43,8 @@ brew install --cask minanyang/tap/steadywifi
 需要 Xcode Command Line Tools。
 
 ```sh
-git clone https://github.com/minanyang/steadywifi
-cd steadywifi
+git clone https://github.com/minanyang/steady-wifi
+cd steady-wifi
 make install          # 編譯 SteadyWiFi.app 並放進「應用程式」
 open /Applications/SteadyWiFi.app
 ```

@@ -4,10 +4,10 @@ cask "steadywifi" do
   version "0.1.0"
   sha256 "REPLACE_WITH_RELEASE_SHA256"
 
-  url "https://github.com/minanyang/steadywifi/releases/download/v#{version}/SteadyWiFi.zip"
+  url "https://github.com/minanyang/steady-wifi/releases/download/v#{version}/SteadyWiFi.zip"
   name "Steady WiFi"
   desc "Keeps your Mac steady on your phone's hotspot and on Wi-Fi"
-  homepage "https://github.com/minanyang/steadywifi"
+  homepage "https://github.com/minanyang/steady-wifi"
 
   depends_on macos: ">= :ventura"
 
