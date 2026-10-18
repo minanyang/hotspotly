@@ -11,6 +11,9 @@ public final class Agent {
     /// stopped advertising can stay unseen for a long time, so back off while it is not found.
     let notFoundSpacing: [TimeInterval] = [60, 120, 300, 600]
 
+    /// handleAWDL runs on the agent thread and the watcher on its own, so both take this lock.
+    let awdlLock = NSLock()
+    var keepAWDLDown = false
     var awdlDownedByUs = false
     var awdlFailureLogged = false
     var trackedPin: Config.Pin?
@@ -24,6 +27,11 @@ public final class Agent {
 
     public func run() -> Never {
         event("agent started")
+        AWDLWatcher.start { [self] in
+            awdlLock.lock()
+            defer { awdlLock.unlock() }
+            if keepAWDLDown { _ = Net.setAWDL(up: false) }
+        }
         while true {
             // Without a run loop nothing drains autoreleased objects, so every Pipe from `sh` stayed
             // open until the agent ran out of file descriptors and every command failed.
@@ -50,8 +58,12 @@ public final class Agent {
     }
 
     func handleAWDL(onHotspot: Bool) {
+        awdlLock.lock()
+        defer { awdlLock.unlock() }
+        keepAWDLDown = onHotspot
         if onHotspot {
-            // macOS brings awdl0 back whenever something asks for it, so this runs every tick.
+            // macOS brings awdl0 back whenever something asks for it. The watcher takes it down at
+            // once; this catches anything it missed.
             // Already down counts as ours too (e.g. left down by a previous run), so leaving the
             // hotspot still brings it back up.
             guard Net.awdlIsUp() else { awdlDownedByUs = true; return }

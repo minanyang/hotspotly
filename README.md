@@ -104,7 +104,7 @@ with a weaker radio, aggressive power saving and AWDL of its own, often drops th
 Turning AWDL off fixes this, but AirDrop, Universal Control, Sidecar and the like stop working
 until it is back on. That is why Steady WiFi turns it off only while you are on a hotspot, and why
 **Pause** brings it back. macOS turns AWDL back on whenever one of those features asks for it,
-so Steady WiFi checks every 10 seconds.
+so Steady WiFi watches for that and turns it off again within milliseconds.
 
 To see its state yourself: `ifconfig awdl0` shows `<UP,…>` when it is on.
 
