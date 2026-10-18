@@ -1,7 +1,7 @@
 # Template for the minanyang/homebrew-tap repository; copy it to Casks/steadywifi.rb there.
 # Fill in version and sha256 for each release.
 cask "steadywifi" do
-  version "0.1.0"
+  version "0.2.0"
   sha256 "REPLACE_WITH_RELEASE_SHA256"
 
   url "https://github.com/minanyang/steady-wifi/releases/download/v#{version}/SteadyWiFi.zip"
