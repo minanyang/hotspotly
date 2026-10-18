@@ -26,14 +26,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Everything else works when the user declines, because the agent identifies networks by gateway MAC.
     let locationManager = CLLocationManager()
     var timer: Timer?
+    /// The CLI ships inside the bundle; "Install Command Line Tool" only links it onto the PATH.
+    let cliPath = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/steadywifi").path
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
         locationManager.requestWhenInUseAuthorization()
+        // The agent loop blocks, so it gets a thread of its own for the app's lifetime.
+        Thread { Agent().run() }.start()
         refreshIcon()
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.refreshIcon() }
+        if !Setup.isRuleInstalled { offerSetup() }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // The agent stops with the app; do not leave AirDrop and friends switched off behind it.
+        if !Net.awdlIsUp() { _ = Net.setAWDL(up: true) }
+    }
+
+    func offerSetup() {
+        let alert = NSAlert()
+        alert.messageText = "Finish setting up Steady WiFi"
+        alert.informativeText = "Turning off AWDL on a hotspot needs administrator rights. Steady WiFi adds a rule that lets it run only `ifconfig awdl0 up` and `ifconfig awdl0 down`, and nothing else. Keepalive and pinning work without it."
+        alert.addButton(withTitle: "Continue")
+        alert.addButton(withTitle: "Not Now")
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        asAdmin("Could not finish setup", Setup.installRule)
+    }
+
+    /// Runs a Setup step off the main thread, since the administrator prompt blocks until answered.
+    func asAdmin(_ failureTitle: String, _ work: @escaping () throws -> Void, then done: @escaping () -> Void = {}) {
+        DispatchQueue.global().async {
+            do {
+                try work()
+                DispatchQueue.main.async(execute: done)
+            } catch let error as SetupError where error.description == "cancelled" {
+                // The user said no; leave things as they are.
+            } catch {
+                DispatchQueue.main.async {
+                    let alert = NSAlert()
+                    alert.messageText = failureTitle
+                    alert.informativeText = "\(error)"
+                    NSApp.activate(ignoringOtherApps: true)
+                    alert.runModal()
+                }
+            }
+        }
     }
 
     func refreshIcon() {
@@ -59,6 +100,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let status = Store.loadStatus()
 
         let ssid = CWWiFiClient.shared().interface()?.ssid()
+        if !Setup.isRuleInstalled {
+            menu.addItem(ActionItem("Finish Setup…") { [weak self] in self?.offerSetup() })
+            menu.addItem(.separator())
+        }
         if let status, !status.isStale {
             if let ssid {
                 info(menu, "Network: \(ssid)")
@@ -72,7 +117,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
             if let event = status.lastEvent { info(menu, "Last: \(event)") }
         } else {
-            info(menu, "Agent not running — run `steadywifi install`")
+            info(menu, "Starting…")
         }
         menu.addItem(.separator())
 
@@ -118,7 +163,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         })
         menu.addItem(ActionItem("Open Log") { NSWorkspace.shared.open(Store.logURL) })
+        let cliLinked = Setup.cliIsLinked(to: cliPath)
+        menu.addItem(ActionItem(cliLinked ? "Uninstall Command Line Tool…" : "Install Command Line Tool…") { [weak self] in
+            guard let self else { return }
+            asAdmin("Could not change the command line tool", cliLinked ? Setup.unlinkCLI : { try Setup.linkCLI(self.cliPath) })
+        })
+        menu.addItem(ActionItem("Uninstall Steady WiFi…") { [weak self] in self?.uninstall() })
+        menu.addItem(.separator())
         menu.addItem(ActionItem("Quit") { NSApp.terminate(nil) })
+    }
+
+    /// Removes what lives outside the bundle, then quits; the user drags the app to the Trash.
+    func uninstall() {
+        let alert = NSAlert()
+        alert.messageText = "Uninstall Steady WiFi?"
+        alert.informativeText = "This removes the administrator rule, the command line tool and the login item, and turns AWDL back on. Then move SteadyWiFi.app to the Trash."
+        alert.addButton(withTitle: "Uninstall")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        try? SMAppService.mainApp.unregister()
+        asAdmin("Could not uninstall", { [cliPath] in try Setup.removeAll(cli: cliPath) }) {
+            NSApp.terminate(nil)
+        }
     }
 
     /// Same as `steadywifi pin <ssid>`: one join, and the password is saved only if it works.

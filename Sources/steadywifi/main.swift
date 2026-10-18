@@ -12,10 +12,9 @@ let usage = """
       mark-hotspot        treat the current network as a hotspot (iPhone hotspots are detected automatically)
       unmark-hotspot      stop treating the current network as a hotspot
       pause | resume      suspend or resume everything (e.g. to use AirDrop)
-      install             start the agent at login and allow it to toggle awdl0
-                          (as root, `install --user <name>` sets it up for that user)
-      uninstall           remove the agent and the sudoers rule
-      run                 run the agent in the foreground (what the LaunchAgent calls)
+      run                 run the agent in the foreground instead of the app (for development)
+
+    The agent runs inside SteadyWiFi.app; these commands read and change its state.
     """
 
 func fail(_ message: String) -> Never {
@@ -23,28 +22,10 @@ func fail(_ message: String) -> Never {
     exit(1)
 }
 
-/// The LaunchAgent must point at a stable path (e.g. Homebrew's bin symlink), not wherever it resolves to.
-func executablePath() -> String {
-    let arg0 = CommandLine.arguments[0]
-    if arg0.contains("/") {
-        return URL(fileURLWithPath: arg0, relativeTo: URL(fileURLWithPath: FileManager.default.currentDirectoryPath))
-            .standardizedFileURL.path
-    }
-    let which = Process()
-    which.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-    which.arguments = [arg0]
-    let pipe = Pipe()
-    which.standardOutput = pipe
-    try? which.run()
-    which.waitUntilExit()
-    return String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-}
-
 func printStatus() {
     let config = Store.loadConfig()
     guard let status = Store.loadStatus(), !status.isStale else {
-        print("agent:    not running\(Installer.isInstalled ? "" : " (run `steadywifi install`)")")
+        print("agent:    not running (open SteadyWiFi.app)")
         return
     }
     print("agent:    running\(config.paused ? ", paused" : "")")
@@ -78,6 +59,8 @@ func readPassword(_ prompt: String) -> String? {
 let args = Array(CommandLine.arguments.dropFirst())
 switch args.first {
 case "run":
+    // Two loops would fight over awdl0 and both write status.json.
+    if let status = Store.loadStatus(), !status.isStale { fail("the agent is already running (quit SteadyWiFi.app first)") }
     Agent().run()
 case "status", nil:
     printStatus()
@@ -124,22 +107,6 @@ case "pause":
     Store.updateConfig { $0.paused = true }
 case "resume":
     Store.updateConfig { $0.paused = false }
-case "install":
-    var user: String?
-    if args.count == 3 && args[1] == "--user" {
-        user = args[2]
-    } else if args.count != 1 {
-        fail("usage: steadywifi install [--user <name>]")
-    }
-    do {
-        try Installer.install(executable: executablePath(), user: user)
-        print("installed; the agent is running")
-    } catch {
-        fail("\(error)")
-    }
-case "uninstall":
-    Installer.uninstall()
-    print("uninstalled")
 case "-h", "--help", "help":
     print(usage)
 default:

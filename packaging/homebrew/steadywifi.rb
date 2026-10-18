@@ -1,31 +1,29 @@
-# Template for the minanyang/homebrew-tap repository; copy it to Formula/steadywifi.rb there.
-# Fill in url and sha256 for each release.
-class Steadywifi < Formula
-  desc "Keep a Mac steady on a phone hotspot: AWDL off, keepalive, pinned network"
-  homepage "https://github.com/minanyang/steadywifi"
-  url "https://github.com/minanyang/steadywifi/archive/refs/tags/v0.1.0.tar.gz"
+# Template for the minanyang/homebrew-tap repository; copy it to Casks/steadywifi.rb there.
+# Fill in version and sha256 for each release.
+cask "steadywifi" do
+  version "0.1.0"
   sha256 "REPLACE_WITH_RELEASE_SHA256"
-  license "MIT"
 
-  depends_on :macos
+  url "https://github.com/minanyang/steadywifi/releases/download/v#{version}/SteadyWiFi.zip"
+  name "Steady WiFi"
+  desc "Keeps your Mac steady on your phone's hotspot and on Wi-Fi"
+  homepage "https://github.com/minanyang/steadywifi"
 
-  def install
-    # Built here from source, so the app carries no quarantine flag and Gatekeeper does not block it.
-    system "make", "install", "PREFIX=#{prefix}", "APPDIR=#{prefix}"
-  end
+  depends_on macos: ">= :ventura"
 
-  def caveats
-    <<~EOS
-      Start the agent at login. It asks for your password once, to add a sudoers
-      rule that allows only `ifconfig awdl0 up|down`:
-        steadywifi install
+  app "SteadyWiFi.app"
+  binary "#{appdir}/SteadyWiFi.app/Contents/MacOS/steadywifi"
 
-      Optional menu bar app:
-        open #{opt_prefix}/SteadyWiFi.app
-    EOS
-  end
+  uninstall quit:   "io.github.minanyang.steadywifi.bar",
+            delete: "/etc/sudoers.d/steadywifi"
 
-  test do
-    assert_match "usage: steadywifi", shell_output("#{bin}/steadywifi --help")
-  end
+  zap trash: [
+    "~/Library/Application Support/steadywifi",
+    "~/Library/Logs/steadywifi.log",
+  ]
+
+  caveats <<~EOS
+    Steady WiFi is not notarized yet. If macOS blocks it on first launch, open
+    System Settings → Privacy & Security and click Open Anyway.
+  EOS
 end

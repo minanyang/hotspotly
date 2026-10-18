@@ -37,7 +37,7 @@ public enum Net {
         return firstLine.contains("<UP")
     }
 
-    /// Needs the sudoers rule that `steadywifi install` adds; `-n` fails instead of prompting.
+    /// Needs the sudoers rule that Setup installs; `-n` fails instead of prompting.
     public static func setAWDL(up: Bool) -> Bool {
         sh("/usr/bin/sudo", ["-n", "/sbin/ifconfig", "awdl0", up ? "up" : "down"]).status == 0
     }

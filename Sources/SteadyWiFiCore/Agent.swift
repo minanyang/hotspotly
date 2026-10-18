@@ -1,6 +1,7 @@
 import Foundation
 
-/// The background loop run by the LaunchAgent (`steadywifi run`).
+/// The background loop. The menu bar app runs it on a thread of its own; `steadywifi run` runs it
+/// in the foreground for development.
 public final class Agent {
     let interval: TimeInterval = 10
     /// Each failed join drops the current network for a few seconds, so tries are few and far apart.
@@ -51,12 +52,14 @@ public final class Agent {
     func handleAWDL(onHotspot: Bool) {
         if onHotspot {
             // macOS brings awdl0 back whenever something asks for it, so this runs every tick.
-            guard Net.awdlIsUp() else { return }
+            // Already down counts as ours too (e.g. left down by a previous run), so leaving the
+            // hotspot still brings it back up.
+            guard Net.awdlIsUp() else { awdlDownedByUs = true; return }
             if Net.setAWDL(up: false) {
                 if !awdlDownedByUs { event("awdl0 down") }
                 awdlDownedByUs = true
             } else if !awdlFailureLogged {
-                event("cannot bring awdl0 down: sudoers rule missing, run `steadywifi install`")
+                event("cannot bring awdl0 down: sudoers rule missing, choose Finish Setup in the menu")
                 awdlFailureLogged = true
             }
         } else if awdlDownedByUs {
