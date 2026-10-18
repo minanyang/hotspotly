@@ -1,24 +1,24 @@
 #!/bin/bash
-# Installs the latest SteadyWiFi.app from GitHub Releases:
-#   curl -fsSL https://raw.githubusercontent.com/minanyang/steady-wifi/main/install.sh | bash
+# Installs the latest Hotspotly.app from GitHub Releases:
+#   curl -fsSL https://raw.githubusercontent.com/minanyang/hotspotly/main/install.sh | bash
 set -euo pipefail
 
-REPO=${REPO:-minanyang/steady-wifi}
+REPO=${REPO:-minanyang/hotspotly}
 DEST=/Applications
 [ -w "$DEST" ] || DEST="$HOME/Applications"
 mkdir -p "$DEST"
 
 tmp=$(mktemp -d)
 trap 'rm -r -f "$tmp"' EXIT
-echo "Downloading Steady WiFi…"
-curl -fsSL "https://github.com/$REPO/releases/latest/download/SteadyWiFi.zip" -o "$tmp/SteadyWiFi.zip"
-ditto -x -k "$tmp/SteadyWiFi.zip" "$tmp"
+echo "Downloading Hotspotly…"
+curl -fsSL "https://github.com/$REPO/releases/latest/download/Hotspotly.zip" -o "$tmp/Hotspotly.zip"
+ditto -x -k "$tmp/Hotspotly.zip" "$tmp"
 
-pkill -x SteadyWiFiBar 2>/dev/null || true
-rm -r -f "$DEST/SteadyWiFi.app"
-mv "$tmp/SteadyWiFi.app" "$DEST/"
+pkill -x HotspotlyBar 2>/dev/null || true
+rm -r -f "$DEST/Hotspotly.app"
+mv "$tmp/Hotspotly.app" "$DEST/"
 # Not notarized yet: drop the quarantine flag so Gatekeeper does not block it.
-xattr -dr com.apple.quarantine "$DEST/SteadyWiFi.app" 2>/dev/null || true
+xattr -dr com.apple.quarantine "$DEST/Hotspotly.app" 2>/dev/null || true
 
-open "$DEST/SteadyWiFi.app"
-echo "Installed to $DEST/SteadyWiFi.app. Finish setup from the menu bar icon."
+open "$DEST/Hotspotly.app"
+echo "Installed to $DEST/Hotspotly.app. Finish setup from the menu bar icon."

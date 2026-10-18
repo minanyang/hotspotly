@@ -5,13 +5,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleIdentifier</key>
-	<string>io.github.minanyang.steadywifi.bar</string>
+	<string>io.github.minanyang.hotspotly.bar</string>
 	<key>CFBundleName</key>
-	<string>SteadyWiFi</string>
+	<string>Hotspotly</string>
 	<key>CFBundleDisplayName</key>
-	<string>Steady WiFi</string>
+	<string>Hotspotly</string>
 	<key>CFBundleExecutable</key>
-	<string>SteadyWiFiBar</string>
+	<string>HotspotlyBar</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -23,8 +23,8 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSLocationUsageDescription</key>
-	<string>macOS only reveals the Wi-Fi network name to apps with location access. Steady WiFi uses it to show which network you are on; it never reads your location.</string>
+	<string>macOS only reveals the Wi-Fi network name to apps with location access. Hotspotly uses it to show which network you are on; it never reads your location.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>macOS only reveals the Wi-Fi network name to apps with location access. Steady WiFi uses it to show which network you are on; it never reads your location.</string>
+	<string>macOS only reveals the Wi-Fi network name to apps with location access. Hotspotly uses it to show which network you are on; it never reads your location.</string>
 </dict>
 </plist>

@@ -1,8 +1,8 @@
 import Foundation
-import SteadyWiFiCore
+import HotspotlyCore
 
 let usage = """
-    usage: steadywifi <command>
+    usage: hotspotly <command>
 
       status              show what the agent sees
       networks            list remembered Wi-Fi networks
@@ -17,18 +17,18 @@ let usage = """
       allow-awdl stop     end that early
       run                 run the agent in the foreground instead of the app (for development)
 
-    The agent runs inside SteadyWiFi.app; these commands read and change its state.
+    The agent runs inside Hotspotly.app; these commands read and change its state.
     """
 
 func fail(_ message: String) -> Never {
-    FileHandle.standardError.write(Data("steadywifi: \(message)\n".utf8))
+    FileHandle.standardError.write(Data("hotspotly: \(message)\n".utf8))
     exit(1)
 }
 
 func printStatus() {
     let config = Store.loadConfig()
     guard let status = Store.loadStatus(), !status.isStale else {
-        print("agent:    not running (open SteadyWiFi.app)")
+        print("agent:    not running (open Hotspotly.app)")
         return
     }
     print("agent:    running\(config.paused ? ", paused" : "")")
@@ -69,7 +69,7 @@ let args = Array(CommandLine.arguments.dropFirst())
 switch args.first {
 case "run":
     // Two loops would fight over awdl0 and both write status.json.
-    if let status = Store.loadStatus(), !status.isStale { fail("the agent is already running (quit SteadyWiFi.app first)") }
+    if let status = Store.loadStatus(), !status.isStale { fail("the agent is already running (quit Hotspotly.app first)") }
     Agent().run()
 case "status", nil:
     printStatus()
@@ -78,7 +78,7 @@ case "networks":
     for ssid in Net.preferredNetworks() { print("\(ssid == pinned ? "*" : " ") \(ssid)") }
 case "pin":
     let here = args.count == 3 && args[1] == "--here"
-    guard args.count == 2 || here else { fail("usage: steadywifi pin [--here] <ssid>") }
+    guard args.count == 2 || here else { fail("usage: hotspotly pin [--here] <ssid>") }
     let ssid = args[args.count - 1]
     guard Net.preferredNetworks().contains(ssid) else {
         fail("'\(ssid)' is not a remembered network; join it once in System Settings first")
@@ -117,7 +117,7 @@ case "pause":
 case "resume":
     Store.updateConfig { $0.paused = false }
 case "awdl":
-    guard args.count == 2, ["on", "off"].contains(args[1]) else { fail("usage: steadywifi awdl on|off") }
+    guard args.count == 2, ["on", "off"].contains(args[1]) else { fail("usage: hotspotly awdl on|off") }
     Store.updateConfig { $0.awdlOff = args[1] == "on" }
 case "allow-awdl":
     if args.count == 2 && args[1] == "stop" {
@@ -125,7 +125,7 @@ case "allow-awdl":
         break
     }
     guard args.count <= 2, let minutes = args.count == 2 ? Int(args[1]) : 10, minutes > 0 else {
-        fail("usage: steadywifi allow-awdl [minutes] | allow-awdl stop")
+        fail("usage: hotspotly allow-awdl [minutes] | allow-awdl stop")
     }
     let until = Date().addingTimeInterval(TimeInterval(minutes * 60))
     Store.updateConfig { $0.awdlAllowedUntil = until }

@@ -55,8 +55,8 @@ public struct Status: Codable {
 
 public enum Store {
     static let home = FileManager.default.homeDirectoryForCurrentUser
-    public static let dir = home.appendingPathComponent("Library/Application Support/steadywifi")
-    public static let logURL = home.appendingPathComponent("Library/Logs/steadywifi.log")
+    public static let dir = home.appendingPathComponent("Library/Application Support/hotspotly")
+    public static let logURL = home.appendingPathComponent("Library/Logs/hotspotly.log")
     static let configURL = dir.appendingPathComponent("config.json")
     static let statusURL = dir.appendingPathComponent("status.json")
 

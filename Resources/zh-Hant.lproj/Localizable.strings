@@ -22,20 +22,20 @@
 "Open Log" = "打開記錄檔";
 "Install Command Line Tool…" = "安裝命令列工具…";
 "Uninstall Command Line Tool…" = "移除命令列工具…";
-"Uninstall Steady WiFi…" = "解除安裝 Steady WiFi…";
-"Quit Steady WiFi" = "結束 Steady WiFi";
+"Uninstall Hotspotly…" = "解除安裝 Hotspotly…";
+"Quit Hotspotly" = "結束 Hotspotly";
 
 /* Setup */
-"Finish setting up Steady WiFi" = "完成 Steady WiFi 的設定";
-"Turning off AWDL on a hotspot needs administrator rights. Steady WiFi adds a rule that lets it run only `ifconfig awdl0 up` and `ifconfig awdl0 down`, and nothing else. Keepalive and pinning work without it." = "在熱點上關閉 AWDL 需要管理員權限。Steady WiFi 會加入一條規則，只允許它執行 `ifconfig awdl0 up` 和 `ifconfig awdl0 down`，其他什麼都不能做。不設定的話，keepalive 和釘選網路照常能用。";
+"Finish setting up Hotspotly" = "完成 Hotspotly 的設定";
+"Turning off AWDL on a hotspot needs administrator rights. Hotspotly adds a rule that lets it run only `ifconfig awdl0 up` and `ifconfig awdl0 down`, and nothing else. Keepalive and pinning work without it." = "在熱點上關閉 AWDL 需要管理員權限。Hotspotly 會加入一條規則，只允許它執行 `ifconfig awdl0 up` 和 `ifconfig awdl0 down`，其他什麼都不能做。不設定的話，keepalive 和釘選網路照常能用。";
 "Continue" = "繼續";
 "Not Now" = "稍後";
 "Could not finish setup" = "無法完成設定";
 "Could not change the command line tool" = "無法變更命令列工具";
 
 /* Uninstall */
-"Uninstall Steady WiFi?" = "要解除安裝 Steady WiFi 嗎？";
-"This removes the administrator rule, the command line tool and the login item, and turns AWDL back on. Then move SteadyWiFi.app to the Trash." = "這會移除管理員規則、命令列工具和登入項目，並重新打開 AWDL。之後把 SteadyWiFi.app 丟到垃圾桶就好。";
+"Uninstall Hotspotly?" = "要解除安裝 Hotspotly 嗎？";
+"This removes the administrator rule, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash." = "這會移除管理員規則、命令列工具和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。";
 "Uninstall" = "解除安裝";
 "Cancel" = "取消";
 "Could not uninstall" = "無法解除安裝";

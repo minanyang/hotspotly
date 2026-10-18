@@ -1,10 +1,10 @@
 import Foundation
 
 /// The parts that need root, done through the standard macOS administrator prompt: the sudoers
-/// rule that lets the agent toggle awdl0, and the optional `steadywifi` link on the PATH.
+/// rule that lets the agent toggle awdl0, and the optional `hotspotly` link on the PATH.
 public enum Setup {
-    public static let sudoersPath = "/etc/sudoers.d/steadywifi"
-    public static let cliLinkPath = "/usr/local/bin/steadywifi"
+    public static let sudoersPath = "/etc/sudoers.d/hotspotly"
+    public static let cliLinkPath = "/usr/local/bin/hotspotly"
 
     public static var isRuleInstalled: Bool { FileManager.default.fileExists(atPath: sudoersPath) }
 
@@ -14,7 +14,7 @@ public enum Setup {
     }
 
     public static func installRule() throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent("steadywifi.sudoers")
+        let temp = FileManager.default.temporaryDirectory.appendingPathComponent("hotspotly.sudoers")
         try sudoersRule.write(to: temp, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: temp) }
         guard sh("/usr/sbin/visudo", ["-cf", temp.path]).status == 0 else {

@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "steadywifi",
+    name: "hotspotly",
     platforms: [.macOS(.v13)],
     products: [
-        .executable(name: "steadywifi", targets: ["steadywifi"]),
-        .executable(name: "SteadyWiFiBar", targets: ["SteadyWiFiBar"]),
+        .executable(name: "hotspotly", targets: ["hotspotly"]),
+        .executable(name: "HotspotlyBar", targets: ["HotspotlyBar"]),
     ],
     targets: [
-        .target(name: "SteadyWiFiCore"),
-        .executableTarget(name: "steadywifi", dependencies: ["SteadyWiFiCore"]),
-        .executableTarget(name: "SteadyWiFiBar", dependencies: ["SteadyWiFiCore"]),
+        .target(name: "HotspotlyCore"),
+        .executableTarget(name: "hotspotly", dependencies: ["HotspotlyCore"]),
+        .executableTarget(name: "HotspotlyBar", dependencies: ["HotspotlyCore"]),
     ]
 )

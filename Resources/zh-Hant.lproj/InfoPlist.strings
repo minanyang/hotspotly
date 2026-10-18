@@ -1,2 +1,2 @@
-"NSLocationUsageDescription" = "macOS 只讓有位置權限的 app 讀取 Wi-Fi 網路名稱。Steady WiFi 用它來顯示你連著哪個網路，不會讀取你的位置。";
-"NSLocationWhenInUseUsageDescription" = "macOS 只讓有位置權限的 app 讀取 Wi-Fi 網路名稱。Steady WiFi 用它來顯示你連著哪個網路，不會讀取你的位置。";
+"NSLocationUsageDescription" = "macOS 只讓有位置權限的 app 讀取 Wi-Fi 網路名稱。Hotspotly 用它來顯示你連著哪個網路，不會讀取你的位置。";
+"NSLocationWhenInUseUsageDescription" = "macOS 只讓有位置權限的 app 讀取 Wi-Fi 網路名稱。Hotspotly 用它來顯示你連著哪個網路，不會讀取你的位置。";

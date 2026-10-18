@@ -1,6 +1,6 @@
 import Foundation
 
-/// The background loop. The menu bar app runs it on a thread of its own; `steadywifi run` runs it
+/// The background loop. The menu bar app runs it on a thread of its own; `hotspotly run` runs it
 /// in the foreground for development.
 public final class Agent {
     let interval: TimeInterval = 10
@@ -111,7 +111,7 @@ public final class Agent {
         guard rejoinFailures < maxRejoinFailures, Date() >= nextRejoin else { return }
         nextRejoin = Date().addingTimeInterval(rejoinSpacing)
         guard let password = Keychain.password(for: pin.ssid) else {
-            event("no saved password for '\(pin.ssid)'; run `steadywifi pin \"\(pin.ssid)\"` once to save it")
+            event("no saved password for '\(pin.ssid)'; run `hotspotly pin \"\(pin.ssid)\"` once to save it")
             rejoinFailures = maxRejoinFailures
             return
         }

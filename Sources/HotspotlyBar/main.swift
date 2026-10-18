@@ -1,7 +1,7 @@
 import AppKit
 import CoreLocation
 import CoreWLAN
-import SteadyWiFiCore
+import HotspotlyCore
 import ServiceManagement
 
 /// Looks the text up in Localizable.strings, so the menu follows the system language.
@@ -92,7 +92,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var timer: Timer?
     let agent = Agent()
     /// The CLI ships inside the bundle; "Install Command Line Tool" only links it onto the PATH.
-    let cliPath = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/steadywifi").path
+    let cliPath = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/hotspotly").path
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let menu = NSMenu()
@@ -114,8 +114,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func offerSetup() {
         let alert = NSAlert()
-        alert.messageText = L("Finish setting up Steady WiFi")
-        alert.informativeText = L("Turning off AWDL on a hotspot needs administrator rights. Steady WiFi adds a rule that lets it run only `ifconfig awdl0 up` and `ifconfig awdl0 down`, and nothing else. Keepalive and pinning work without it.")
+        alert.messageText = L("Finish setting up Hotspotly")
+        alert.informativeText = L("Turning off AWDL on a hotspot needs administrator rights. Hotspotly adds a rule that lets it run only `ifconfig awdl0 up` and `ifconfig awdl0 down`, and nothing else. Keepalive and pinning work without it.")
         alert.addButton(withTitle: L("Continue"))
         alert.addButton(withTitle: L("Not Now"))
         NSApp.activate(ignoringOtherApps: true)
@@ -161,7 +161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func routerIcon(filled: Bool = false, badge: String? = nil) -> NSImage {
         let pointSize: CGFloat = 14
-        let router = NSImage(systemSymbolName: filled ? "wifi.router.fill" : "wifi.router", accessibilityDescription: "Steady WiFi")!
+        let router = NSImage(systemSymbolName: filled ? "wifi.router.fill" : "wifi.router", accessibilityDescription: "Hotspotly")!
             .withSymbolConfiguration(.init(pointSize: pointSize, weight: .regular))!
         guard let badge, let mark = NSImage(systemSymbolName: badge, accessibilityDescription: nil)?
             .withSymbolConfiguration(.init(pointSize: pointSize * 0.7, weight: .semibold)) else { return router }
@@ -185,7 +185,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let ssid = CWWiFiClient.shared().interface()?.ssid()
 
         let header = NSMenuItem()
-        header.view = SwitchRow("Steady WiFi", isOn: !config.paused) { [weak self] isOn in
+        header.view = SwitchRow("Hotspotly", isOn: !config.paused) { [weak self] isOn in
             Store.updateConfig { $0.paused = !isOn }
             self?.agent.refresh()
             self?.refreshIcon()
@@ -221,7 +221,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(submenu(L("Pin Network"), pinMenu(config: config, status: status, ssid: ssid)))
         menu.addItem(.separator())
         menu.addItem(submenu(L("Settings"), settingsMenu(config: config, status: status)))
-        menu.addItem(ActionItem(L("Quit Steady WiFi")) { NSApp.terminate(nil) })
+        menu.addItem(ActionItem(L("Quit Hotspotly")) { NSApp.terminate(nil) })
     }
 
     /// One line about the network, plus one when away from the pinned network.
@@ -327,15 +327,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             guard let self else { return }
             asAdmin(L("Could not change the command line tool"), cliLinked ? Setup.unlinkCLI : { try Setup.linkCLI(self.cliPath) })
         })
-        menu.addItem(ActionItem(L("Uninstall Steady WiFi…")) { [weak self] in self?.uninstall() })
+        menu.addItem(ActionItem(L("Uninstall Hotspotly…")) { [weak self] in self?.uninstall() })
         return menu
     }
 
     /// Removes what lives outside the bundle, then quits; the user drags the app to the Trash.
     func uninstall() {
         let alert = NSAlert()
-        alert.messageText = L("Uninstall Steady WiFi?")
-        alert.informativeText = L("This removes the administrator rule, the command line tool and the login item, and turns AWDL back on. Then move SteadyWiFi.app to the Trash.")
+        alert.messageText = L("Uninstall Hotspotly?")
+        alert.informativeText = L("This removes the administrator rule, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash.")
         alert.addButton(withTitle: L("Uninstall"))
         alert.addButton(withTitle: L("Cancel"))
         NSApp.activate(ignoringOtherApps: true)
@@ -346,7 +346,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    /// Same as `steadywifi pin <ssid>`: one join, and the password is saved only if it works.
+    /// Same as `hotspotly pin <ssid>`: one join, and the password is saved only if it works.
     func switchAndPin(_ network: String) {
         let saved = Keychain.password(for: network)
         guard let password = saved ?? askPassword(for: network) else { return }

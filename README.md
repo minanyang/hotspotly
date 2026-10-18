@@ -1,14 +1,14 @@
 <div align="center">
 
-# Steady WiFi
+# Hotspotly
 
 Keeps your Mac steady on your phone's hotspot and on Wi-Fi.
 
-[![Release](https://img.shields.io/github/v/release/minanyang/steady-wifi)](https://github.com/minanyang/steady-wifi/releases/latest)
+[![Release](https://img.shields.io/github/v/release/minanyang/hotspotly)](https://github.com/minanyang/hotspotly/releases/latest)
 ![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**English** · [繁體中文](README.zh-TW.md) · [Download](https://github.com/minanyang/steady-wifi/releases/latest/download/SteadyWiFi.zip)
+**English** · [繁體中文](README.zh-TW.md) · [Download](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip)
 
 </div>
 
@@ -22,7 +22,7 @@ last also hit regular Wi-Fi:
   a while.
 - **macOS wanders off** to another remembered network nearby, often another hotspot.
 
-Steady WiFi is a menu bar app that, every 10 seconds:
+Hotspotly is a menu bar app that, every 10 seconds:
 
 - turns AWDL off while you are on a hotspot, and back on when you leave it, so AirDrop keeps
   working on regular Wi-Fi;
@@ -33,9 +33,9 @@ Steady WiFi is a menu bar app that, every 10 seconds:
 
 Requires macOS 13 (Ventura) or later.
 
-1. Download [SteadyWiFi.zip](https://github.com/minanyang/steady-wifi/releases/latest/download/SteadyWiFi.zip),
-   unzip it and drag **SteadyWiFi** to Applications.
-2. Open it. Steady WiFi is not notarized yet, so macOS blocks it the first time: open
+1. Download [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip),
+   unzip it and drag **Hotspotly** to Applications.
+2. Open it. Hotspotly is not notarized yet, so macOS blocks it the first time: open
    **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
 3. Click **Continue** when it asks to finish setup, and enter your password (see
    [Permissions](#permissions)).
@@ -45,7 +45,7 @@ Requires macOS 13 (Ventura) or later.
 Or, from a terminal (skips the Gatekeeper step):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/minanyang/steady-wifi/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/minanyang/hotspotly/main/install.sh | bash
 ```
 
 ### From source
@@ -53,10 +53,10 @@ curl -fsSL https://raw.githubusercontent.com/minanyang/steady-wifi/main/install.
 Requires the Xcode Command Line Tools.
 
 ```sh
-git clone https://github.com/minanyang/steady-wifi
-cd steady-wifi
-make install          # builds SteadyWiFi.app into /Applications
-open /Applications/SteadyWiFi.app
+git clone https://github.com/minanyang/hotspotly
+cd hotspotly
+make install          # builds Hotspotly.app into /Applications
+open /Applications/Hotspotly.app
 ```
 
 ## Using it
@@ -70,26 +70,26 @@ Everything is in the menu bar icon's menu:
 | **Allow AirDrop for 10 Minutes** | Leaves AWDL on for 10 minutes, then turns it off again. The menu shows the time left and can stop it early |
 | **Pin Network** | Pick a remembered network to stay on. The first time, it asks for that network's Wi-Fi password |
 | **Current Network Is a Hotspot** | For Android phones and pocket routers. iPhone hotspots are detected automatically |
-| **Open at Login** | Starts Steady WiFi when you log in |
+| **Open at Login** | Starts Hotspotly when you log in |
 | **Install Command Line Tool…** | Optional, see [Command line](#command-line) |
 
 **Pinning.** A pinned network is recognised by its gateway's MAC address. Pinning switches to it
 once and asks for its Wi-Fi password the first time: macOS does not let other apps use the
-copy it keeps in the System keychain, so Steady WiFi keeps its own in your login keychain, saved
+copy it keeps in the System keychain, so Hotspotly keeps its own in your login keychain, saved
 only after a join works. If the join fails, nothing is pinned and macOS reconnects to whatever
 network it prefers.
 
-When the Mac leaves the pinned network, Steady WiFi waits a minute, then tries to switch back at
+When the Mac leaves the pinned network, Hotspotly waits a minute, then tries to switch back at
 most once a minute. A failed join drops the current network for a few seconds, so after 3
 failures it stops until the Mac is back on the pinned network. Tries that do not find the
 network nearby leave the connection alone and do not count, but each one scans, so while the
 network stays out of sight the tries spread out to 2, 5 and then 10 minutes apart. An iPhone
-hotspot stops advertising when idle; the built-in Wi-Fi menu can still wake it, Steady WiFi
+hotspot stops advertising when idle; the built-in Wi-Fi menu can still wake it, Hotspotly
 cannot.
 
-Quitting Steady WiFi stops all of this and turns AWDL back on.
+Quitting Hotspotly stops all of this and turns AWDL back on.
 
-The log is at `~/Library/Logs/steadywifi.log` (**Open Log** in the menu).
+The log is at `~/Library/Logs/hotspotly.log` (**Open Log** in the menu).
 
 ## What is AWDL?
 
@@ -104,35 +104,35 @@ latency spikes and dropped packets. A home router copes with this fairly well; a
 with a weaker radio, aggressive power saving and AWDL of its own, often drops the connection.
 
 Turning AWDL off fixes this, but AirDrop, Universal Control, Sidecar and the like stop working
-until it is back on. That is why Steady WiFi turns it off only while you are on a hotspot, and why
+until it is back on. That is why Hotspotly turns it off only while you are on a hotspot, and why
 **Allow AirDrop for 10 Minutes** and **Turn Off AWDL on Hotspots** let you bring it back. macOS turns AWDL back on whenever one of those features asks for it,
-so Steady WiFi watches for that and turns it off again within milliseconds.
+so Hotspotly watches for that and turns it off again within milliseconds.
 
 To see its state yourself: `ifconfig awdl0` shows `<UP,…>` when it is on.
 
 ## Command line
 
-The app contains a `steadywifi` command. **Install Command Line Tool…** in the menu links it to
-`/usr/local/bin/steadywifi`; or do it yourself:
+The app contains a `hotspotly` command. **Install Command Line Tool…** in the menu links it to
+`/usr/local/bin/hotspotly`; or do it yourself:
 
 ```sh
-sudo ln -s /Applications/SteadyWiFi.app/Contents/MacOS/steadywifi /usr/local/bin/steadywifi
+sudo ln -s /Applications/Hotspotly.app/Contents/MacOS/hotspotly /usr/local/bin/hotspotly
 ```
 
 ```
-steadywifi status                 what Steady WiFi sees right now
-steadywifi networks               remembered Wi-Fi networks (* = pinned)
-steadywifi pin "<ssid>"           switch to <ssid> and pin it (asks for its password once)
-steadywifi pin --here "<ssid>"    pin the network you are on now, named <ssid>
-steadywifi unpin
-steadywifi mark-hotspot           treat the current network as a hotspot
-steadywifi unmark-hotspot
-steadywifi pause
-steadywifi resume
-steadywifi awdl on|off            turn AWDL off on hotspots (on, the default) or leave it alone
-steadywifi allow-awdl [minutes]   leave AWDL on for a while (default 10 minutes)
-steadywifi allow-awdl stop
-steadywifi run                    run the loop in the foreground instead of the app (development)
+hotspotly status                 what Hotspotly sees right now
+hotspotly networks               remembered Wi-Fi networks (* = pinned)
+hotspotly pin "<ssid>"           switch to <ssid> and pin it (asks for its password once)
+hotspotly pin --here "<ssid>"    pin the network you are on now, named <ssid>
+hotspotly unpin
+hotspotly mark-hotspot           treat the current network as a hotspot
+hotspotly unmark-hotspot
+hotspotly pause
+hotspotly resume
+hotspotly awdl on|off            turn AWDL off on hotspots (on, the default) or leave it alone
+hotspotly allow-awdl [minutes]   leave AWDL on for a while (default 10 minutes)
+hotspotly allow-awdl stop
+hotspotly run                    run the loop in the foreground instead of the app (development)
 ```
 
 The commands change the running app's settings; they need the app to be running, except `run`.
@@ -140,23 +140,23 @@ The commands change the running app's settings; they need the app to be running,
 ## Permissions
 
 - **Administrator password, once, at setup.** Turning AWDL off needs root. Instead of running
-  anything as root, setup adds `/etc/sudoers.d/steadywifi`, which lets your user run exactly two
+  anything as root, setup adds `/etc/sudoers.d/hotspotly`, which lets your user run exactly two
   commands without a password: `/sbin/ifconfig awdl0 down` and `/sbin/ifconfig awdl0 up`. If you
   skip it, keepalive and pinning still work; **Finish Setup…** stays in the menu until you do it
   or turn off **Turn Off AWDL on Hotspots**.
 - **Location (optional).** macOS hides Wi-Fi network names from apps without location access.
   With it, the menu shows the current network's name. Without it, everything still works:
-  Steady WiFi tells networks apart by their gateway's MAC address, which macOS does not hide.
+  Hotspotly tells networks apart by their gateway's MAC address, which macOS does not hide.
   It never reads your location.
-- **Login keychain.** Passwords of networks you pin from Steady WiFi, under
-  `io.github.minanyang.steadywifi`.
+- **Login keychain.** Passwords of networks you pin from Hotspotly, under
+  `io.github.minanyang.hotspotly`.
 
 ## Uninstall
 
-Choose **Uninstall Steady WiFi…** in the menu. It removes the sudoers rule, the command line link
-and the login item, and turns AWDL back on. Then move SteadyWiFi.app to the Trash.
+Choose **Uninstall Hotspotly…** in the menu. It removes the sudoers rule, the command line link
+and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash.
 
-Settings live in `~/Library/Application Support/steadywifi`.
+Settings live in `~/Library/Application Support/hotspotly`.
 
 ## License
 

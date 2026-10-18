@@ -4,7 +4,7 @@ import Foundation
 /// the ones macOS keeps in the System keychain. Goes through /usr/bin/security so the item's access
 /// list names that tool rather than this binary, whose ad-hoc signature changes with every build.
 public enum Keychain {
-    static let service = "io.github.minanyang.steadywifi"
+    static let service = "io.github.minanyang.hotspotly"
 
     /// "" for an open network.
     public static func password(for ssid: String) -> String? {
