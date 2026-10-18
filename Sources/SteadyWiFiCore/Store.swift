@@ -17,8 +17,25 @@ public struct Config: Codable, Equatable {
     /// Gateway MACs of networks the user marked as hotspots.
     public var hotspotMACs: [String] = []
     public var paused = false
+    /// Turn AWDL off while on a hotspot. Some prefer to keep Universal Control and friends.
+    public var awdlOff = true
+    /// Leaves AWDL alone until then, e.g. to use AirDrop on a hotspot for a few minutes.
+    public var awdlAllowedUntil: Date?
+
+    public var awdlAllowed: Bool { awdlAllowedUntil.map { $0 > Date() } == true }
 
     public init() {}
+
+    /// Missing keys keep their defaults, so a config written by an older version still loads;
+    /// a failed decode would fall back to `Config()` and lose the pin.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        pin = try c.decodeIfPresent(Pin.self, forKey: .pin)
+        hotspotMACs = try c.decodeIfPresent([String].self, forKey: .hotspotMACs) ?? hotspotMACs
+        paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? paused
+        awdlOff = try c.decodeIfPresent(Bool.self, forKey: .awdlOff) ?? awdlOff
+        awdlAllowedUntil = try c.decodeIfPresent(Date.self, forKey: .awdlAllowedUntil)
+    }
 }
 
 /// Written by the agent on every tick; read by the CLI and the menu bar app.

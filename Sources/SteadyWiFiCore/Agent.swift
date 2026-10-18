@@ -22,8 +22,12 @@ public final class Agent {
     var notFoundStreak = 0
     var nextRejoin = Date.distantPast
     var lastEvent: String?
+    /// Lets the app tick right away after a menu change instead of up to 10 seconds later.
+    let wakeUp = DispatchSemaphore(value: 0)
 
     public init() {}
+
+    public func refresh() { wakeUp.signal() }
 
     public func run() -> Never {
         event("agent started")
@@ -36,7 +40,7 @@ public final class Agent {
             // Without a run loop nothing drains autoreleased objects, so every Pipe from `sh` stayed
             // open until the agent ran out of file descriptors and every command failed.
             autoreleasepool { tick() }
-            Thread.sleep(forTimeInterval: interval)
+            _ = wakeUp.wait(timeout: .now() + interval)
         }
     }
 
@@ -49,7 +53,7 @@ public final class Agent {
         let mac = gateway.flatMap(Net.mac(of:))
         let onHotspot = gateway == Net.iPhoneGateway || mac.map(config.hotspotMACs.contains) == true
 
-        handleAWDL(onHotspot: onHotspot && !config.paused)
+        handleAWDL(onHotspot: onHotspot && !config.paused && config.awdlOff && !config.awdlAllowed)
         let onPin = config.paused ? nil : handlePin(config.pin, currentMAC: mac)
 
         Store.saveStatus(Status(

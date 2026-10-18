@@ -57,7 +57,9 @@ open /Applications/SteadyWiFi.app
 
 | 選項 | 作用 |
 | --- | --- |
-| **Pause / Resume** | 暫停或恢復所有功能，例如在熱點上要用 AirDrop 的時候 |
+| **Pause / Resume** | 暫停或恢復所有功能 |
+| **Turn Off AWDL on Hotspots** | 預設開啟。關掉後，在熱點上也能照常用 AirDrop、通用控制等功能；keepalive 和釘選網路照常運作 |
+| **Allow AirDrop for 10 Minutes** | 讓 AWDL 開著 10 分鐘，時間到再關掉。選單會顯示剩下的時間，也可以提早結束 |
 | **Pin Network** | 選一個連過的網路，讓 Mac 一直待在上面。第一次會詢問那個網路的 Wi-Fi 密碼 |
 | **Current Network Is a Hotspot** | 給 Android 手機或行動網卡用。iPhone 熱點會自動偵測 |
 | **Open at Login** | 登入時自動開啟 Steady WiFi |
@@ -77,7 +79,7 @@ AWDL（Apple Wireless Direct Link）是 Apple 裝置之間不經過路由器、�
 
 Mac 只有一組 Wi-Fi 無線電，AWDL 和你的 Wi-Fi 連線要共用。AWDL 每秒會好幾次把無線電切到它自己的頻道（通常是 6、44 或 149），去找附近的 Apple 裝置。切走的那段時間，Mac 收不到你網路的封包，於是延遲突然變高、掉封包。家裡的路由器比較能容忍這種情況；手機熱點的無線電比較弱、省電機制比較積極，手機本身也在跑 AWDL，所以常常直接斷線。
 
-關掉 AWDL 就能解決這個問題，但在打開之前，AirDrop、通用控制、隨航這些功能都不能用。所以 Steady WiFi 只在你連著熱點時才關掉它，按 **Pause** 也會把它打開。只要有這些功能需要 AWDL，macOS 就會把它重新打開，所以 Steady WiFi 會一直盯著，一被打開就在幾毫秒內關掉。
+關掉 AWDL 就能解決這個問題，但在打開之前，AirDrop、通用控制、隨航這些功能都不能用。所以 Steady WiFi 只在你連著熱點時才關掉它，需要時可以用 **Allow AirDrop for 10 Minutes** 暫時打開，或取消勾選 **Turn Off AWDL on Hotspots** 讓它一直開著。只要有這些功能需要 AWDL，macOS 就會把它重新打開，所以 Steady WiFi 會一直盯著，一被打開就在幾毫秒內關掉。
 
 想自己看它的狀態：執行 `ifconfig awdl0`，開著的時候會顯示 `<UP,…>`。
 
@@ -99,6 +101,9 @@ steadywifi mark-hotspot           把目前的網路當成熱點
 steadywifi unmark-hotspot
 steadywifi pause
 steadywifi resume
+steadywifi awdl on|off            在熱點上關掉 AWDL（on，預設）或完全不管它（off）
+steadywifi allow-awdl [分鐘]      讓 AWDL 暫時開著（預設 10 分鐘）
+steadywifi allow-awdl stop        提早結束
 steadywifi run                    不開 app，在前景執行背景迴圈（開發用）
 ```
 
@@ -106,7 +111,7 @@ steadywifi run                    不開 app，在前景執行背景迴圈（開
 
 ## 權限
 
-- **設定時輸入一次管理員密碼。** 關掉 AWDL 需要 root 權限。Steady WiFi 不會用 root 執行任何程式，而是在設定時加入 `/etc/sudoers.d/steadywifi`，讓你的帳號可以不用密碼執行兩個指令，而且只有這兩個：`/sbin/ifconfig awdl0 down` 和 `/sbin/ifconfig awdl0 up`。如果跳過這一步，keepalive 和釘選網路照常能用，選單會一直顯示 **Finish Setup…**。
+- **設定時輸入一次管理員密碼。** 關掉 AWDL 需要 root 權限。Steady WiFi 不會用 root 執行任何程式，而是在設定時加入 `/etc/sudoers.d/steadywifi`，讓你的帳號可以不用密碼執行兩個指令，而且只有這兩個：`/sbin/ifconfig awdl0 down` 和 `/sbin/ifconfig awdl0 up`。如果跳過這一步，keepalive 和釘選網路照常能用，選單會一直顯示 **Finish Setup…**，直到你完成設定，或取消勾選 **Turn Off AWDL on Hotspots**。
 - **位置（選用）。** macOS 不讓沒有位置權限的 app 讀取 Wi-Fi 名稱。允許後，選單會顯示目前的網路名稱；不允許也不影響功能，因為 Steady WiFi 是用閘道的 MAC 位址來辨認網路，macOS 不會隱藏這個資訊。它不會讀取你的位置。
 - **登入鑰匙圈。** 你透過 Steady WiFi 釘選的網路密碼，存在 `io.github.minanyang.steadywifi` 底下。
 

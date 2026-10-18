@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Everything else works when the user declines, because the agent identifies networks by gateway MAC.
     let locationManager = CLLocationManager()
     var timer: Timer?
+    let agent = Agent()
     /// The CLI ships inside the bundle; "Install Command Line Tool" only links it onto the PATH.
     let cliPath = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/steadywifi").path
 
@@ -35,10 +36,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.menu = menu
         locationManager.requestWhenInUseAuthorization()
         // The agent loop blocks, so it gets a thread of its own for the app's lifetime.
-        Thread { Agent().run() }.start()
+        Thread { [agent] in agent.run() }.start()
         refreshIcon()
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.refreshIcon() }
-        if !Setup.isRuleInstalled { offerSetup() }
+        // The rule is only needed to turn AWDL off.
+        if !Setup.isRuleInstalled && Store.loadConfig().awdlOff { offerSetup() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -100,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let status = Store.loadStatus()
 
         let ssid = CWWiFiClient.shared().interface()?.ssid()
-        if !Setup.isRuleInstalled {
+        if !Setup.isRuleInstalled && config.awdlOff {
             menu.addItem(ActionItem("Finish Setup…") { [weak self] in self?.offerSetup() })
             menu.addItem(.separator())
         }
@@ -125,6 +127,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             Store.updateConfig { $0.paused.toggle() }
             self?.refreshIcon()
         })
+        menu.addItem(ActionItem("Turn Off AWDL on Hotspots", checked: config.awdlOff) { [weak self] in
+            Store.updateConfig { $0.awdlOff.toggle() }
+            self?.agent.refresh()
+            if !config.awdlOff && !Setup.isRuleInstalled { self?.offerSetup() }
+        })
+        if config.awdlOff {
+            if let until = config.awdlAllowedUntil, config.awdlAllowed {
+                let minutes = Int((until.timeIntervalSinceNow / 60).rounded(.up))
+                menu.addItem(ActionItem("Stop Allowing AirDrop (\(minutes) min left)") { [weak self] in
+                    Store.updateConfig { $0.awdlAllowedUntil = nil }
+                    self?.agent.refresh()
+                })
+            } else {
+                menu.addItem(ActionItem("Allow AirDrop for 10 Minutes") { [weak self] in
+                    Store.updateConfig { $0.awdlAllowedUntil = Date().addingTimeInterval(10 * 60) }
+                    self?.agent.refresh()
+                })
+            }
+        }
 
         let pinMenu = NSMenu()
         for network in Net.preferredNetworks() {

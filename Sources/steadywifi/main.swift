@@ -11,7 +11,10 @@ let usage = """
       unpin               stop holding a network
       mark-hotspot        treat the current network as a hotspot (iPhone hotspots are detected automatically)
       unmark-hotspot      stop treating the current network as a hotspot
-      pause | resume      suspend or resume everything (e.g. to use AirDrop)
+      pause | resume      suspend or resume everything
+      awdl on | off       turn AWDL off on hotspots (on, the default) or leave it alone
+      allow-awdl [min]    leave AWDL on for <min> minutes (default 10), e.g. for AirDrop
+      allow-awdl stop     end that early
       run                 run the agent in the foreground instead of the app (for development)
 
     The agent runs inside SteadyWiFi.app; these commands read and change its state.
@@ -31,7 +34,13 @@ func printStatus() {
     print("agent:    running\(config.paused ? ", paused" : "")")
     print("gateway:  \(status.gateway ?? "none") \(status.gatewayMAC.map { "(\($0))" } ?? "")")
     print("hotspot:  \(status.onHotspot ? "yes" : "no")")
-    print("awdl0:    \(status.awdlDown ? "down" : "up")")
+    var awdl = status.awdlDown ? "down" : "up"
+    if !config.awdlOff {
+        awdl += " (left alone: awdl off)"
+    } else if let until = config.awdlAllowedUntil, config.awdlAllowed {
+        awdl += " (allowed until \(until.formatted(date: .omitted, time: .shortened)))"
+    }
+    print("awdl0:    \(awdl)")
     if let pin = config.pin {
         let state = status.onPin.map { $0 ? "connected" : "away" } ?? "not checked while paused"
         print("pinned:   \(pin.ssid) (\(state))")
@@ -107,6 +116,20 @@ case "pause":
     Store.updateConfig { $0.paused = true }
 case "resume":
     Store.updateConfig { $0.paused = false }
+case "awdl":
+    guard args.count == 2, ["on", "off"].contains(args[1]) else { fail("usage: steadywifi awdl on|off") }
+    Store.updateConfig { $0.awdlOff = args[1] == "on" }
+case "allow-awdl":
+    if args.count == 2 && args[1] == "stop" {
+        Store.updateConfig { $0.awdlAllowedUntil = nil }
+        break
+    }
+    guard args.count <= 2, let minutes = args.count == 2 ? Int(args[1]) : 10, minutes > 0 else {
+        fail("usage: steadywifi allow-awdl [minutes] | allow-awdl stop")
+    }
+    let until = Date().addingTimeInterval(TimeInterval(minutes * 60))
+    Store.updateConfig { $0.awdlAllowedUntil = until }
+    print("AWDL stays on until \(until.formatted(date: .omitted, time: .shortened)) (takes effect within 10 seconds)")
 case "-h", "--help", "help":
     print(usage)
 default:

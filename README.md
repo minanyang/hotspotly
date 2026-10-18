@@ -65,7 +65,9 @@ Everything is in the menu bar icon's menu:
 
 | Item | What it does |
 | --- | --- |
-| **Pause / Resume** | Suspends everything, e.g. to use AirDrop on a hotspot |
+| **Pause / Resume** | Suspends everything |
+| **Turn Off AWDL on Hotspots** | On by default. Turn it off to keep AirDrop, Universal Control and the like on hotspots; keepalive and pinning keep working |
+| **Allow AirDrop for 10 Minutes** | Leaves AWDL on for 10 minutes, then turns it off again. The menu shows the time left and can stop it early |
 | **Pin Network** | Pick a remembered network to stay on. The first time, it asks for that network's Wi-Fi password |
 | **Current Network Is a Hotspot** | For Android phones and pocket routers. iPhone hotspots are detected automatically |
 | **Open at Login** | Starts Steady WiFi when you log in |
@@ -103,7 +105,7 @@ with a weaker radio, aggressive power saving and AWDL of its own, often drops th
 
 Turning AWDL off fixes this, but AirDrop, Universal Control, Sidecar and the like stop working
 until it is back on. That is why Steady WiFi turns it off only while you are on a hotspot, and why
-**Pause** brings it back. macOS turns AWDL back on whenever one of those features asks for it,
+**Allow AirDrop for 10 Minutes** and **Turn Off AWDL on Hotspots** let you bring it back. macOS turns AWDL back on whenever one of those features asks for it,
 so Steady WiFi watches for that and turns it off again within milliseconds.
 
 To see its state yourself: `ifconfig awdl0` shows `<UP,…>` when it is on.
@@ -127,6 +129,9 @@ steadywifi mark-hotspot           treat the current network as a hotspot
 steadywifi unmark-hotspot
 steadywifi pause
 steadywifi resume
+steadywifi awdl on|off            turn AWDL off on hotspots (on, the default) or leave it alone
+steadywifi allow-awdl [minutes]   leave AWDL on for a while (default 10 minutes)
+steadywifi allow-awdl stop
 steadywifi run                    run the loop in the foreground instead of the app (development)
 ```
 
@@ -137,7 +142,8 @@ The commands change the running app's settings; they need the app to be running,
 - **Administrator password, once, at setup.** Turning AWDL off needs root. Instead of running
   anything as root, setup adds `/etc/sudoers.d/steadywifi`, which lets your user run exactly two
   commands without a password: `/sbin/ifconfig awdl0 down` and `/sbin/ifconfig awdl0 up`. If you
-  skip it, keepalive and pinning still work; **Finish Setup…** stays in the menu.
+  skip it, keepalive and pinning still work; **Finish Setup…** stays in the menu until you do it
+  or turn off **Turn Off AWDL on Hotspots**.
 - **Location (optional).** macOS hides Wi-Fi network names from apps without location access.
   With it, the menu shows the current network's name. Without it, everything still works:
   Steady WiFi tells networks apart by their gateway's MAC address, which macOS does not hide.
