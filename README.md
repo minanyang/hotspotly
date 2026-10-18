@@ -48,12 +48,6 @@ Or, from a terminal (skips the Gatekeeper step):
 curl -fsSL https://raw.githubusercontent.com/minanyang/steady-wifi/main/install.sh | bash
 ```
 
-Or with Homebrew:
-
-```sh
-brew install --cask minanyang/tap/steadywifi
-```
-
 ### From source
 
 Requires the Xcode Command Line Tools.
@@ -154,8 +148,7 @@ The commands change the running app's settings; they need the app to be running,
 ## Uninstall
 
 Choose **Uninstall Steady WiFi…** in the menu. It removes the sudoers rule, the command line link
-and the login item, and turns AWDL back on. Then move SteadyWiFi.app to the Trash. With
-Homebrew: `brew uninstall --cask steadywifi`.
+and the login item, and turns AWDL back on. Then move SteadyWiFi.app to the Trash.
 
 Settings live in `~/Library/Application Support/steadywifi`.
 

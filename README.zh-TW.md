@@ -40,12 +40,6 @@ Steady WiFi 是一個選單列 app，每 10 秒會做這些事：
 curl -fsSL https://raw.githubusercontent.com/minanyang/steady-wifi/main/install.sh | bash
 ```
 
-或是用 Homebrew：
-
-```sh
-brew install --cask minanyang/tap/steadywifi
-```
-
 ### 從原始碼編譯
 
 需要 Xcode Command Line Tools。
@@ -118,7 +112,7 @@ steadywifi run                    不開 app，在前景執行背景迴圈（開
 
 ## 移除
 
-在選單選 **Uninstall Steady WiFi…**，它會移除 sudoers 規則、命令列工具的連結和登入項目，並重新打開 AWDL。之後把 SteadyWiFi.app 丟到垃圾桶就好。用 Homebrew 安裝的話：`brew uninstall --cask steadywifi`。
+在選單選 **Uninstall Steady WiFi…**，它會移除 sudoers 規則、命令列工具的連結和登入項目，並重新打開 AWDL。之後把 SteadyWiFi.app 丟到垃圾桶就好。
 
 設定檔在 `~/Library/Application Support/steadywifi`。
 
