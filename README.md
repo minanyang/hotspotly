@@ -139,4 +139,9 @@ Settings live in `~/Library/Application Support/hotspotly`.
 
 ## License
 
-MIT
+The code is released under the [MIT License](LICENSE).
+
+The Hotspotly name and logo are not covered by the MIT License. The logo artwork
+(`Resources/AppIcon.icns`, `Resources/MenuBarIcon.pdf`, `Resources/MenuBarIconFilled.pdf`, `docs/icon.png`)
+and the script that draws it (`scripts/make-icons.swift`) are © 2026 Min-An Yang (minanyang), all rights reserved. Forks and derivative works must use a different name and logo;
+saying a fork is "based on Hotspotly" is fine.
