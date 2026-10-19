@@ -101,3 +101,9 @@
 "Use Password Saved on This Mac…" = "使用這台 Mac 儲存的密碼…";
 "Hide Menu Bar Icon" = "隱藏選單列圖示";
 "Hotspotly keeps running. Open it again from Applications to see these settings." = "Hotspotly 會繼續執行。從「應用程式」再打開一次即可看到這些設定。";
+"Check for Updates…" = "檢查更新…";
+"Update to %@…" = "更新到 %@…";
+"Check for Updates Automatically" = "自動檢查更新";
+"Install Updates Automatically" = "自動安裝更新";
+"Check Now" = "立即檢查";
+"Last check: %@" = "上次檢查：%@";

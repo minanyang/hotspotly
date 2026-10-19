@@ -10,6 +10,8 @@ cask "hotspotly" do
   homepage "https://github.com/minanyang/hotspotly"
 
   depends_on macos: ">= :ventura"
+  # Sparkle updates the app in place.
+  auto_updates true
 
   app "Hotspotly.app"
   binary "#{appdir}/Hotspotly.app/Contents/MacOS/hotspotly"

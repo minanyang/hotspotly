@@ -11,10 +11,17 @@ ZIP := $(BUILD)/Hotspotly.zip
 # and run `make notarize`.
 SIGN_IDENTITY ?= -
 # Notarization requires the hardened runtime and a secure timestamp. Ad-hoc builds get neither: the
-# runtime only loads libraries from the app's own team, and ad-hoc code has no team.
+# runtime only loads libraries from the app's own team, and ad-hoc code has no team, so Sparkle
+# would not load.
 SIGN := codesign --force $(if $(filter -,$(SIGN_IDENTITY)),,--options runtime --timestamp) --sign "$(SIGN_IDENTITY)"
 # Saved once with `xcrun notarytool store-credentials hotspotly`.
 NOTARY_PROFILE ?= hotspotly
+# Sparkle (MIT) does the in-app updates. Downloaded once and checked against the release checksum.
+SPARKLE_VERSION := 2.10.0
+SPARKLE_SHA256 := c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c
+SPARKLE := vendor/Sparkle-$(SPARKLE_VERSION)
+# The EdDSA key that signs updates, in the login keychain; made with `generate_keys --account hotspotly`.
+SPARKLE_ACCOUNT := hotspotly
 
 all: $(APP)
 
@@ -27,17 +34,33 @@ $(BUILD)/libHotspotlyCore.a: $(CORE)
 $(BUILD)/hotspotly: Sources/hotspotly/main.swift $(BUILD)/libHotspotlyCore.a
 	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $<
 
-$(BUILD)/HotspotlyBar: $(wildcard Sources/HotspotlyBar/*.swift) $(BUILD)/libHotspotlyCore.a
-	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $(wildcard Sources/HotspotlyBar/*.swift)
+$(BUILD)/HotspotlyBar: $(wildcard Sources/HotspotlyBar/*.swift) $(BUILD)/libHotspotlyCore.a | $(SPARKLE)
+	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -F $(SPARKLE) -framework Sparkle \
+		-Xlinker -rpath -Xlinker @executable_path/../Frameworks -o $@ $(wildcard Sources/HotspotlyBar/*.swift)
 
-# The CLI ships inside the app; it is signed first since codesign wants nested code signed.
+$(SPARKLE):
+	mkdir -p $@
+	curl -fsSL -o $@.tar.xz https://github.com/sparkle-project/Sparkle/releases/download/$(SPARKLE_VERSION)/Sparkle-$(SPARKLE_VERSION).tar.xz
+	echo "$(SPARKLE_SHA256)  $@.tar.xz" | shasum -a 256 -c -
+	tar -xJf $@.tar.xz -C $@
+	rm $@.tar.xz
+
+# The CLI and Sparkle ship inside the app; they are signed first since codesign wants nested code
+# signed, and with the same identity, since the hardened runtime only loads code from its own team.
 $(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly Resources/Info.plist $(wildcard Resources/*.lproj/*) \
 		Resources/AppIcon.icns $(wildcard Resources/*.pdf) Resources/Hotspotly.entitlements
 	rm -r -f $@
 	mkdir -p $@/Contents/MacOS $@/Contents/Resources
 	cp $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $@/Contents/MacOS/
 	cp -R Resources/*.lproj Resources/AppIcon.icns Resources/*.pdf $@/Contents/Resources/
+	cp $(SPARKLE)/LICENSE $@/Contents/Resources/Sparkle-LICENSE
 	sed 's/__VERSION__/$(VERSION)/' Resources/Info.plist > $@/Contents/Info.plist
+	ditto $(SPARKLE)/Sparkle.framework $@/Contents/Frameworks/Sparkle.framework
+	# Only sandboxed apps need Sparkle's XPC services.
+	rm -r -f $@/Contents/Frameworks/Sparkle.framework/XPCServices $@/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices
+	$(SIGN) $@/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate
+	$(SIGN) $@/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app
+	$(SIGN) $@/Contents/Frameworks/Sparkle.framework
 	$(SIGN) $@/Contents/MacOS/hotspotly
 	$(SIGN) --entitlements Resources/Hotspotly.entitlements $@
 
@@ -62,6 +85,21 @@ notarize: $(ZIP)
 	rm -f $(ZIP)
 	ditto -c -k --keepParent $(APP) $(ZIP)
 
+# Signs the zip with the Sparkle key and writes appcast.xml, which installed copies read to find
+# updates. NOTES is an optional HTML fragment for the update window. Commit and push appcast.xml
+# only after the zip is on the GitHub release.
+appcast: | $(SPARKLE)
+	test -f $(ZIP)
+	scripts/make-appcast.sh $(VERSION) "$$($(SPARKLE)/bin/sign_update --account $(SPARKLE_ACCOUNT) $(ZIP))" $(NOTES) > appcast.xml
+
+# Everything for a release, in order. Refuses an ad-hoc build: it would not pass Gatekeeper, and
+# Sparkle would refuse it as an update to a Developer ID-signed copy.
+release:
+	test "$(SIGN_IDENTITY)" != "-"
+	$(MAKE) clean
+	$(MAKE) notarize SIGN_IDENTITY="$(SIGN_IDENTITY)"
+	$(MAKE) appcast
+
 # Redraws the logo into the app icon, menu bar icons and README image; the outputs are committed.
 icons:
 	@mkdir -p $(BUILD)
@@ -71,4 +109,4 @@ icons:
 clean:
 	rm -r -f $(BUILD)
 
-.PHONY: all app install zip notarize icons clean
+.PHONY: all app install zip notarize appcast release icons clean

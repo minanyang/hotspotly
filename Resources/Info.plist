@@ -24,6 +24,12 @@
 	<string>13.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/minanyang/hotspotly/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>HBBcjPLfqtNWMPQAdFAB3w8BVgE7mJgaOAWmnD8gOEY=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
 	<key>NSLocationUsageDescription</key>
 	<string>macOS only reveals the Wi-Fi network name to apps with location access. Hotspotly uses it to show which network you are on; it never reads your location.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

@@ -2,6 +2,7 @@ import AppKit
 import CoreWLAN
 import HotspotlyCore
 import ServiceManagement
+import Sparkle
 import SwiftUI
 
 /// What the Settings window shows, reloaded each time it opens and after every change.
@@ -20,6 +21,25 @@ final class SettingsModel: ObservableObject {
     var finishSetup: () -> Void = {}
     var asAdmin: (String, @escaping () throws -> Void, @escaping () -> Void) -> Void = { _, _, _ in }
     var uninstallApp: () -> Void = {}
+    var checkForUpdates: () -> Void = {}
+    var updater: SPUUpdater?
+
+    var checksForUpdates: Bool {
+        get { updater?.automaticallyChecksForUpdates ?? false }
+        set {
+            updater?.automaticallyChecksForUpdates = newValue
+            objectWillChange.send()
+        }
+    }
+
+    /// Downloads and installs in the background; the update applies when Hotspotly next quits.
+    var installsUpdates: Bool {
+        get { updater?.automaticallyDownloadsUpdates ?? false }
+        set {
+            updater?.automaticallyDownloadsUpdates = newValue
+            objectWillChange.send()
+        }
+    }
 
     init(cliPath: String) {
         self.cliPath = cliPath
@@ -262,6 +282,8 @@ struct NetworksTab: View {
 }
 
 struct AboutTab: View {
+    @ObservedObject var model: SettingsModel
+
     var body: some View {
         VStack(spacing: 8) {
             Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 96, height: 96)
@@ -271,8 +293,26 @@ struct AboutTab: View {
             Text(L("Keeps your Mac steady on phone hotspots and Wi-Fi.")).padding(.top, 4)
             Link("github.com/minanyang/hotspotly", destination: URL(string: "https://github.com/minanyang/hotspotly")!)
             Text(L("MIT License")).font(.caption).foregroundStyle(.secondary)
+            Divider().padding(.vertical, 8)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle(L("Check for Updates Automatically"), isOn: Binding(get: { model.checksForUpdates }, set: { model.checksForUpdates = $0 }))
+                    Toggle(L("Install Updates Automatically"), isOn: Binding(get: { model.installsUpdates }, set: { model.installsUpdates = $0 }))
+                        .disabled(!model.checksForUpdates)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 6) {
+                    Button(L("Check Now"), action: model.checkForUpdates)
+                    if let date = model.updater?.lastUpdateCheckDate {
+                        Text(L("Last check: \(date.formatted(date: .abbreviated, time: .shortened))"))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
         }
-        .frame(width: 480, height: 280)
+        .padding(.vertical)
+        .frame(width: 480, height: 380)
     }
 }
 
@@ -296,7 +336,7 @@ final class SettingsWindow {
                 (L("General"), "gearshape", AnyView(GeneralTab(model: model))),
                 (L("Hotspots"), "personalhotspot", AnyView(HotspotsTab(model: model))),
                 (L("Networks"), "wifi", AnyView(NetworksTab(model: model))),
-                (L("About"), "info.circle", AnyView(AboutTab())),
+                (L("About"), "info.circle", AnyView(AboutTab(model: model))),
             ] {
                 let hosting = NSHostingController(rootView: view)
                 hosting.sizingOptions = .preferredContentSize

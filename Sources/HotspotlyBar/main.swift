@@ -3,6 +3,7 @@ import CoreLocation
 import CoreWLAN
 import HotspotlyCore
 import ServiceManagement
+import Sparkle
 
 /// Looks the text up in Localizable.strings, so the menu follows the system language.
 func L(_ key: String.LocalizationValue) -> String { String(localized: key) }
@@ -142,7 +143,7 @@ final class LightRow: NSView {
     }
 }
 
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUStandardUserDriverDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     /// Only used to unlock the SSID; macOS redacts it without location access.
     /// Everything else works when the user declines, because the agent identifies networks by gateway MAC.
@@ -152,6 +153,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     var liveRows: (connection: LightRow, readings: [LightRow], protection: LightRow)?
     var liveTimer: Timer?
     let agent = Agent()
+    /// Checks appcast.xml on GitHub once a day and installs updates signed with the project's key.
+    lazy var updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: self)
+    /// A scheduled check found this version while the user was busy; offered in the menu instead.
+    var availableUpdate: String?
     /// The CLI ships inside the bundle; "Install Command Line Tool" only links it onto the PATH.
     let cliPath = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/hotspotly").path
     lazy var settings: SettingsWindow = {
@@ -163,6 +168,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         model.finishSetup = { [weak self] in self?.offerSetup() }
         model.asAdmin = { [weak self] title, work, done in self?.asAdmin(title, work, then: done) }
         model.uninstallApp = { [weak self] in self?.uninstall() }
+        model.updater = updater.updater
+        model.checkForUpdates = { [weak self] in self?.checkForUpdates() }
         return SettingsWindow(model: model)
     }()
 
@@ -178,6 +185,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         appItem.submenu = appMenu
         NSApp.mainMenu = NSMenu()
         NSApp.mainMenu?.addItem(appItem)
+        _ = updater
         // The agent loop blocks, so it gets a thread of its own for the app's lifetime.
         Thread { [agent] in agent.run() }.start()
         refreshIcon()
@@ -286,6 +294,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if !Setup.isRuleInstalled && config.awdlMode != .never {
             menu.addItem(ActionItem(L("Finish Setup…")) { [weak self] in self?.offerSetup() })
         }
+        if let version = availableUpdate {
+            menu.addItem(ActionItem(L("Update to \(version)…")) { [weak self] in self?.checkForUpdates() })
+        }
         liveRows = nil
         guard let status, !status.isStale else {
             info(menu, L("Starting…"))
@@ -321,6 +332,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func addFooter(_ menu: NSMenu) {
+        menu.addItem(ActionItem(L("Check for Updates…")) { [weak self] in self?.checkForUpdates() })
         let settings = ActionItem(L("Settings…")) { [weak self] in self?.showSettings() }
         settings.keyEquivalent = ","
         menu.addItem(settings)
@@ -513,6 +525,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func showSettings() {
         settings.show()
+    }
+
+    func checkForUpdates() {
+        // A background app's update window would otherwise open behind the frontmost app.
+        NSApp.activate(ignoringOtherApps: true)
+        updater.checkForUpdates(nil)
+    }
+
+    // Gentle reminders: a menu bar app has no window the user is looking at, so a scheduled check
+    // shows Sparkle's window only when it would not interrupt (just launched or idle), and otherwise
+    // adds "Update to …" to the menu.
+    var supportsGentleScheduledUpdateReminders: Bool { true }
+
+    func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
+        immediateFocus
+    }
+
+    func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
+        if !handleShowingUpdate { availableUpdate = update.displayVersionString }
+    }
+
+    func standardUserDriverDidReceiveUserAttention(forUpdate update: SUAppcastItem) {
+        availableUpdate = nil
+    }
+
+    func standardUserDriverWillFinishUpdateSession() {
+        availableUpdate = nil
     }
 
     @discardableResult
