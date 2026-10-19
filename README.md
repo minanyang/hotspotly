@@ -63,57 +63,31 @@ open /Applications/Hotspotly.app
 
 ## Using it
 
-Everything is in the menu bar icon's menu. The icon's router body is filled while you are on a
-hotspot, and a small badge shows when Hotspotly is paused or not running. The menu follows the
-system language (English or Traditional Chinese).
+Everything is in the menu bar icon. The switch at the top turns Hotspotly off and on, and
+**Allow AirDrop for 10 Minutes** appears while you are on a hotspot. Rarely used options are under
+**Settings**. The icon's router is filled while you are on a hotspot. The menu follows the system
+language (English or Traditional Chinese).
 
-| Item | What it does |
-| --- | --- |
-| **Hotspotly** switch | Turns everything off and on again |
-| Status line | The network, whether it is a hotspot, AWDL's state and whether you are on the pinned network |
-| **Allow AirDrop for 10 Minutes** | On a hotspot: leaves AWDL on for 10 minutes, then turns it off again. The menu shows the time left and can stop it early |
-| **Pin Network** | Pick a network to stay on: the current one, remembered ones nearby, or any other remembered network. The first time, it asks for that network's Wi-Fi password |
-| **Settings → Turn Off AWDL on Hotspots** | On by default. Turn it off to keep AirDrop, Universal Control and the like on hotspots; keepalive and pinning keep working |
-| **Settings → Current Network Is a Hotspot** | For Android phones and pocket routers. iPhone hotspots are detected automatically |
-| **Settings → Open at Login** | Starts Hotspotly when you log in |
-| **Settings → Install Command Line Tool…** | Optional, see [Command line](#command-line) |
+**Pinning.** Pick a network under **Pin Network** and Hotspotly pulls the Mac back whenever it
+wanders off, trying a few times before giving up. It asks for the Wi-Fi password once and keeps it
+in your login keychain, because macOS does not share its own copy with other apps. It cannot wake
+an iPhone hotspot that has stopped advertising; the built-in Wi-Fi menu can.
 
-**Pinning.** A pinned network is recognised by its gateway's MAC address. Pinning switches to it
-once and asks for its Wi-Fi password the first time: macOS does not let other apps use the
-copy it keeps in the System keychain, so Hotspotly keeps its own in your login keychain, saved
-only after a join works. If the join fails, nothing is pinned and macOS reconnects to whatever
-network it prefers.
-
-When the Mac leaves the pinned network, Hotspotly waits a minute, then tries to switch back at
-most once a minute. A failed join drops the current network for a few seconds, so after 3
-failures it stops until the Mac is back on the pinned network. Tries that do not find the
-network nearby leave the connection alone and do not count, but each one scans, so while the
-network stays out of sight the tries spread out to 2, 5 and then 10 minutes apart. An iPhone
-hotspot stops advertising when idle; the built-in Wi-Fi menu can still wake it, Hotspotly
-cannot.
-
-Quitting Hotspotly stops all of this and turns AWDL back on.
-
-The log is at `~/Library/Logs/hotspotly.log` (**Settings → Open Log** in the menu).
+Android phones and pocket routers are not detected as hotspots; mark them with **Settings →
+Current Network Is a Hotspot**. Quitting Hotspotly turns AWDL back on. The log is at
+`~/Library/Logs/hotspotly.log`.
 
 ## What is AWDL?
 
-AWDL (Apple Wireless Direct Link) is how Apple devices talk to each other directly over Wi-Fi,
-without a router. On a Mac it is the `awdl0` network interface. AirDrop, AirPlay to nearby
-devices, Handoff, Universal Control, Sidecar and Continuity Camera use it.
+AWDL (Apple Wireless Direct Link) lets Apple devices talk to each other directly over Wi-Fi; it is
+behind AirDrop, Handoff, Universal Control and Sidecar. It shares the Mac's single Wi-Fi radio, and
+several times a second it takes the radio to another channel to look for nearby devices. A home
+router copes; a phone hotspot often shows latency spikes or drops the connection.
 
-A Mac has one Wi-Fi radio, so AWDL and your Wi-Fi connection share it. Several times a second,
-AWDL takes the radio away to its own channel (usually channel 6, 44 or 149) to look for nearby
-Apple devices. While it is away, the Mac misses packets from your network, which shows up as
-latency spikes and dropped packets. A home router copes with this fairly well; a phone hotspot,
-with a weaker radio, aggressive power saving and AWDL of its own, often drops the connection.
-
-Turning AWDL off fixes this, but AirDrop, Universal Control, Sidecar and the like stop working
-until it is back on. That is why Hotspotly turns it off only while you are on a hotspot, and why
-**Allow AirDrop for 10 Minutes** and **Turn Off AWDL on Hotspots** let you bring it back. macOS turns AWDL back on whenever one of those features asks for it,
-so Hotspotly watches for that and turns it off again within milliseconds.
-
-To see its state yourself: `ifconfig awdl0` shows `<UP,…>` when it is on.
+Turning AWDL off fixes this but stops those features, so Hotspotly turns it off only on a hotspot,
+and again within milliseconds whenever macOS brings it back. **Allow AirDrop for 10 Minutes** and
+**Settings → Turn Off AWDL on Hotspots** let you keep it on. `ifconfig awdl0` shows `<UP,…>` when
+it is on.
 
 ## Command line
 
