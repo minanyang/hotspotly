@@ -224,7 +224,8 @@ struct NetworkRow: Identifiable {
         guard let record, let latency = record.latencyMs, let loss = record.packetLoss else { return "" }
         var parts = ["\(Int(latency.rounded())) ms", L("\(Int((loss * 100).rounded()))% loss")]
         if let rssi = record.rssi { parts.append("\(rssi) dBm") }
-        if record.dropouts > 0 { parts.append(L("\(record.dropouts) dropouts")) }
+        if record.dropouts == 1 { parts.append(L("1 dropout")) }
+        if record.dropouts > 1 { parts.append(L("\(record.dropouts) dropouts")) }
         return parts.joined(separator: " · ")
     }
 }
@@ -247,6 +248,7 @@ struct NetworksTab: View {
             TextField(L("Filter"), text: $filter).textFieldStyle(.roundedBorder)
             Table(rows, selection: $selection, sortOrder: $sortOrder) {
                 TableColumn(L("Name"), value: \.name)
+                    .width(min: 120, max: 200)
                 TableColumn(L("Security"), value: \.security) { row in
                     Text(row.security).foregroundStyle(row.insecure ? .orange : .primary)
                 }
@@ -260,6 +262,7 @@ struct NetworksTab: View {
                 }
                 .width(110)
                 TableColumn(L("Quality")) { row in Text(row.quality).foregroundStyle(.secondary) }
+                    .width(min: 280)
             }
             HStack {
                 Text(L("\(model.networks.count) networks. Last connected and quality are recorded by Hotspotly from when it was installed."))
@@ -269,7 +272,7 @@ struct NetworksTab: View {
             }
         }
         .padding()
-        .frame(width: 680, height: 440)
+        .frame(width: 760, height: 440)
         .confirmationDialog(L("Forget \(selection.count) networks?"), isPresented: $confirming) {
             Button(L("Forget"), role: .destructive) {
                 model.forget(selection)

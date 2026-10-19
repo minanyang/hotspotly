@@ -92,6 +92,7 @@
 "Enhanced Open" = "增強型開放";
 "Enterprise" = "企業";
 "%lld dropouts" = "無回應 %lld 次";
+"1 dropout" = "無回應 1 次";
 "%lld networks. Last connected and quality are recorded by Hotspotly from when it was installed." = "共 %lld 個網路。上次連線和連線品質由 Hotspotly 從安裝後開始記錄。";
 "Forget…" = "忘記…";
 "Forget %lld networks?" = "要忘記 %lld 個網路嗎？";
