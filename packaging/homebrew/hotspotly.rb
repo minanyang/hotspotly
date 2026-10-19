@@ -21,9 +21,4 @@ cask "hotspotly" do
     "~/Library/Application Support/hotspotly",
     "~/Library/Logs/hotspotly.log",
   ]
-
-  caveats <<~EOS
-    Hotspotly is not notarized yet. If macOS blocks it on first launch, open
-    System Settings → Privacy & Security and click Open Anyway.
-  EOS
 end
