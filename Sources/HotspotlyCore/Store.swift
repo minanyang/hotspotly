@@ -103,6 +103,7 @@ public enum Store {
     static let configURL = dir.appendingPathComponent("config.json")
     static let statusURL = dir.appendingPathComponent("status.json")
     static let historyURL = dir.appendingPathComponent("history.json")
+    static let insightsURL = dir.appendingPathComponent("insights.json")
 
     public static func loadConfig() -> Config {
         read(Config.self, from: configURL) ?? Config()
@@ -131,6 +132,21 @@ public enum Store {
         var history = loadHistory()
         change(&history)
         write(history, to: historyURL)
+    }
+
+    public static func loadInsights() -> Insights {
+        read(Insights.self, from: insightsURL) ?? Insights()
+    }
+
+    /// The agent thread is the only writer, apart from a reset from the Insights tab.
+    public static func updateInsights(_ change: (inout Insights) -> Void) {
+        var insights = loadInsights()
+        change(&insights)
+        write(insights, to: insightsURL)
+    }
+
+    public static func resetInsights() {
+        write(Insights(), to: insightsURL)
     }
 
     public static func log(_ message: String) {

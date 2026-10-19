@@ -14,6 +14,7 @@ final class SettingsModel: ObservableObject {
     @Published private(set) var cliLinked = false
     @Published private(set) var ruleInstalled = false
     @Published private(set) var networks: [NetworkRow] = []
+    @Published private(set) var insights = Insights()
 
     let cliPath: String
     /// Set by the app delegate, which owns the agent and the administrator prompts.
@@ -59,6 +60,15 @@ final class SettingsModel: ObservableObject {
     func loadNetworks() {
         let history = Store.loadHistory()
         networks = Net.rememberedNetworks().map { NetworkRow(network: $0, record: history[$0.ssid]) }
+    }
+
+    func loadInsights() {
+        insights = Store.loadInsights()
+    }
+
+    func resetInsights() {
+        Store.resetInsights()
+        loadInsights()
     }
 
     func forget(_ ssids: Set<String>) {
@@ -339,6 +349,7 @@ final class SettingsWindow {
                 (L("General"), "gearshape", AnyView(GeneralTab(model: model))),
                 (L("Hotspots"), "personalhotspot", AnyView(HotspotsTab(model: model))),
                 (L("Networks"), "wifi", AnyView(NetworksTab(model: model))),
+                (L("Insights"), "chart.bar", AnyView(InsightsTab(model: model))),
                 (L("About"), "info.circle", AnyView(AboutTab(model: model))),
             ] {
                 let hosting = NSHostingController(rootView: view)

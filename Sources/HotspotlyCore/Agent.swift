@@ -34,6 +34,14 @@ public final class Agent {
         guard let mac = status.gatewayMAC, let bytes = status.hotspotStartBytes else { return nil }
         return (mac, bytes)
     }
+    /// The network of the last tick that had one, with whether AWDL was up during its round; a drop
+    /// starts from there.
+    var online: (network: String, hotspot: Bool, awdlUp: Bool, at: Date)?
+    var openDrop: Drop?
+    /// Counted on the watcher thread too, so these take awdlLock; the tick moves them to insights.json.
+    var awdlBlocked = 0
+    var lastSleep: Date?
+    var rejoins = 0
     /// Lets the app tick right away after a menu change instead of up to 10 seconds later.
     let wakeUp = DispatchSemaphore(value: 0)
 
@@ -41,12 +49,19 @@ public final class Agent {
 
     public func refresh() { wakeUp.signal() }
 
+    /// Called by the app before the Mac sleeps, so the drop that follows is not blamed on Wi-Fi.
+    public func noteSleep() {
+        awdlLock.lock()
+        defer { awdlLock.unlock() }
+        lastSleep = Date()
+    }
+
     public func run() -> Never {
         event("agent started")
         AWDLWatcher.start { [self] in
             awdlLock.lock()
             defer { awdlLock.unlock() }
-            if keepAWDLDown { _ = Net.setAWDL(up: false) }
+            if keepAWDLDown && Net.setAWDL(up: false) { awdlBlocked += 1 }
         }
         while true {
             // Without a run loop nothing drains autoreleased objects, so every Pipe from `sh` stayed
@@ -70,8 +85,12 @@ public final class Agent {
         let mac = gateway.flatMap(Net.mac(of:))
         let onHotspot = gateway == Net.iPhoneGateway || mac.map(config.hotspotMACs.contains) == true
         let silent = probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 }
-        if let probe, let ssid = Net.ssid() { record(probe, on: ssid, silent: silent) }
+        let ssid = Net.ssid()
+        if let probe, let ssid { record(probe, on: ssid, silent: silent) }
         wasSilent = silent
+        // Before handleAWDL: the state the round was measured in.
+        trackInsights(network: gateway == nil ? nil : ssid ?? mac, hotspot: onHotspot, probe: probe,
+                      awdlUp: Net.awdlIsUp())
 
         handleAWDL(down: config.turnsOffAWDL(onHotspot: onHotspot) && !config.paused && !config.awdlAllowed)
         let onPin = config.paused ? nil : handlePin(config.pin, currentMAC: mac)
@@ -107,6 +126,52 @@ public final class Agent {
         }
     }
 
+    func trackInsights(network: String?, hotspot: Bool, probe: Net.Probe?, awdlUp: Bool) {
+        awdlLock.lock()
+        let blocked = awdlBlocked, slept = lastSleep
+        awdlBlocked = 0
+        awdlLock.unlock()
+        let now = Date()
+
+        if let last = online, network != last.network, openDrop == nil {
+            openDrop = Drop(start: last.at, network: last.network, hotspot: last.hotspot)
+        }
+        var ended: (drop: Drop, awdlUp: Bool)?
+        if var drop = openDrop, let network {
+            drop.end = now
+            if let slept, slept >= drop.start.addingTimeInterval(-10) {
+                drop.cause = .slept
+            } else if let (cause, reason) = SystemLog.dropCause(from: drop.start.addingTimeInterval(-5), to: now) {
+                drop.cause = cause
+                drop.reason = reason
+            } else if network != drop.network {
+                drop.cause = .switched
+            }
+            ended = (drop, online?.awdlUp ?? false)
+            openDrop = nil
+        }
+        if let network { online = (network, hotspot, awdlUp, now) }
+
+        let rejoined = rejoins
+        rejoins = 0
+        Store.updateInsights { insights in
+            insights.awdlBlocked += blocked
+            insights.rejoins += rejoined
+            if let ended {
+                insights.drops = (insights.drops + [ended.drop]).suffix(Insights.keptDrops)
+                var stats = insights.networks[ended.drop.network] ?? NetworkInsights(hotspot: ended.drop.hotspot)
+                if ended.awdlUp { stats.awdlOn.drops += 1 } else { stats.awdlOff.drops += 1 }
+                insights.networks[ended.drop.network] = stats
+            }
+            if let network, let probe {
+                var stats = insights.networks[network] ?? NetworkInsights(hotspot: hotspot)
+                stats.hotspot = hotspot
+                if awdlUp { stats.awdlOn.add(probe) } else { stats.awdlOff.add(probe) }
+                insights.networks[network] = stats
+            }
+        }
+    }
+
     /// Counted from joining the hotspot. A moment without a gateway keeps the count going; another
     /// network ends it.
     func hotspotBytes(onHotspot: Bool, gateway: String?, mac: String?) -> Int64? {
@@ -132,6 +197,7 @@ public final class Agent {
             // hotspot still brings it back up.
             guard Net.awdlIsUp() else { awdlDownedByUs = true; return }
             if Net.setAWDL(up: false) {
+                awdlBlocked += 1
                 if !awdlDownedByUs { event("awdl0 down") }
                 awdlDownedByUs = true
             } else if !awdlFailureLogged {
@@ -178,6 +244,7 @@ public final class Agent {
         switch Net.join(pin.ssid, password: password) {
         case .success:
             notFoundStreak = 0  // the next tick logs "back on"
+            rejoins += 1
         case .failure(let error) where error.networkNotFound:
             // Out of range; the current connection was not touched, so this does not count.
             notFoundStreak += 1

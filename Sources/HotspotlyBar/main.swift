@@ -186,6 +186,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         NSApp.mainMenu = NSMenu()
         NSApp.mainMenu?.addItem(appItem)
         _ = updater
+        // A drop that follows sleep is not the network's fault; the agent needs to know.
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: nil) {
+            [agent] _ in agent.noteSleep()
+        }
         // The agent loop blocks, so it gets a thread of its own for the app's lifetime.
         Thread { [agent] in agent.run() }.start()
         refreshIcon()
