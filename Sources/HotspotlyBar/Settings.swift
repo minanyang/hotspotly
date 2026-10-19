@@ -107,6 +107,11 @@ struct GeneralTab: View {
     var body: some View {
         Form {
             Toggle(L("Open at Login"), isOn: Binding(get: { model.openAtLogin }, set: model.setOpenAtLogin))
+            VStack(alignment: .leading, spacing: 2) {
+                Toggle(L("Hide Menu Bar Icon"), isOn: Binding(get: { model.config.hideIcon }, set: { on in model.update { $0.hideIcon = on } }))
+                Text(L("Hotspotly keeps running. Open it again from Applications to see these settings."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
             LabeledContent(L("Command line tool")) {
                 HStack {
                     Text(model.cliLinked ? Setup.cliLinkPath : L("Not installed")).foregroundStyle(.secondary)
@@ -121,7 +126,7 @@ struct GeneralTab: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 480, height: 250)
+        .frame(width: 480, height: 300)
     }
 }
 

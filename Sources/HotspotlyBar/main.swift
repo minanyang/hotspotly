@@ -184,6 +184,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.refreshIcon() }
         // The rule is only needed to turn AWDL off.
         if !Setup.isRuleInstalled && Store.loadConfig().awdlMode != .never { offerSetup() }
+        // With the icon hidden, opening the app by hand is the way to its settings; a login launch is not.
+        let launch = NSAppleEventManager.shared().currentAppleEvent?.paramDescriptor(forKeyword: keyAEPropData)
+        if Store.loadConfig().hideIcon && launch?.enumCodeValue != keyAELaunchedAsLogInItem { showSettings() }
+    }
+
+    /// Opening Hotspotly.app while it runs, which is how to reach Settings with the icon hidden.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showSettings()
+        return false
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -236,6 +245,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         image.isTemplate = true
         statusItem.button?.image = image
+        statusItem.isVisible = !config.hideIcon
     }
 
     func routerIcon(filled: Bool = false, badge: String? = nil) -> NSImage {

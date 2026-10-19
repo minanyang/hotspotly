@@ -27,6 +27,8 @@ public struct Config: Codable, Equatable {
     public var awdlMode = AWDLMode.hotspots
     /// Leaves AWDL alone until then, e.g. to use AirDrop on a hotspot for a few minutes.
     public var awdlAllowedUntil: Date?
+    /// Keeps running without the menu bar icon; opening the app again shows Settings.
+    public var hideIcon = false
 
     public var awdlAllowed: Bool { awdlAllowedUntil.map { $0 > Date() } == true }
 
@@ -47,6 +49,7 @@ public struct Config: Codable, Equatable {
         paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? paused
         awdlMode = try c.decodeIfPresent(AWDLMode.self, forKey: .awdlMode) ?? awdlMode
         awdlAllowedUntil = try c.decodeIfPresent(Date.self, forKey: .awdlAllowedUntil)
+        hideIcon = try c.decodeIfPresent(Bool.self, forKey: .hideIcon) ?? hideIcon
     }
 }
 

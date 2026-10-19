@@ -99,3 +99,5 @@
 "The Mac stops joining them automatically. This needs an administrator password." = "Mac 不會再自動連上這些網路。這需要管理者密碼。";
 "Could not forget the networks" = "無法忘記這些網路";
 "Use Password Saved on This Mac…" = "使用這台 Mac 儲存的密碼…";
+"Hide Menu Bar Icon" = "隱藏選單列圖示";
+"Hotspotly keeps running. Open it again from Applications to see these settings." = "Hotspotly 會繼續執行。從「應用程式」再打開一次即可看到這些設定。";
