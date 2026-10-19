@@ -14,22 +14,25 @@ Keeps your Mac steady on your phone's hotspot and on Wi-Fi.
 
 </div>
 
-Macs drop off phone hotspots, iPhone or Android, for a few reasons that pile up. The first and
-last also hit regular Wi-Fi:
+<p align="center">
+  <img src="docs/screenshots/menu-dark.png" width="306" alt="The Hotspotly menu: connection and protection lights, signal, channel, Wi-Fi standard and data used">
+</p>
 
-- **AWDL** (the radio link behind AirDrop, Handoff, Universal Control and Sidecar) keeps hopping
-  the Wi-Fi chip to other channels, which shows up as latency spikes and disconnects. See
-  [What is AWDL?](#what-is-awdl)
-- **Idle hotspots shut down.** A phone stops advertising its hotspot once nothing has used it for
-  a while.
-- **macOS wanders off** to another remembered network nearby, often another hotspot.
+Hotspotly is a menu bar app for Macs that live on a phone's hotspot. It keeps the connection from
+dropping, shows how good it is, and tidies up the networks your Mac remembers.
 
-Hotspotly is a menu bar app that, every 10 seconds:
+- **Stops hotspot dropouts.** Turns off AWDL, the AirDrop radio link that keeps pulling the Wi-Fi
+  chip off channel, while you are on a hotspot, and turns it back on when you leave.
+- **Keeps the hotspot awake.** Pings the phone so it does not shut an idle hotspot down.
+- **Pins a network.** Pulls the Mac back when macOS wanders off to another remembered network.
+- **Shows the connection.** Latency and packet loss to the router, signal, channel, Wi-Fi standard
+  and, on a hotspot, how much data the Mac has used.
+- **Manages remembered networks.** Lists every network the Mac remembers with its security and how
+  well it worked, and forgets several at once.
+- **Updates itself.** Signed, notarized, and updated from inside the app.
 
-- turns AWDL off while you are on a hotspot, and back on when you leave it, so AirDrop keeps
-  working on regular Wi-Fi;
-- pings the gateway, which keeps an idle hotspot from shutting down;
-- if you pinned a network, pulls the Mac back to it after it switches away.
+iPhone hotspots are recognised automatically; Android phones and pocket routers can be marked by
+hand. The menu follows the system language (English or Traditional Chinese).
 
 ## Install
 
@@ -42,8 +45,6 @@ Requires macOS 13 (Ventura) or later.
    [Permissions](#permissions)).
 3. Allow Location when asked, so the menu can show network names.
 4. Turn on **Open at Login** under **Settings… → General** in its menu.
-
-Later versions update from inside the app; see **Updates** under [Using it](#using-it).
 
 Or, from a terminal:
 
@@ -64,8 +65,10 @@ open /Applications/Hotspotly.app
 
 ## Using it
 
-Everything is in the menu bar icon. The switch at the top turns Hotspotly off and on. Below it
-are two lights, like the two on the icon's router:
+### The menu
+
+The switch at the top turns Hotspotly off and on. Below it are two lights, like the two on the
+icon's router:
 
 - **The network** you are on, with the latency and packet loss to its router over the last minute,
   and the signal, channel and Wi-Fi standard underneath; on a hotspot, also the data the Mac has
@@ -73,30 +76,54 @@ are two lights, like the two on the icon's router:
 - **Protection**: AWDL off and on the pinned network. Amber means AirDrop is allowed or the Mac is
   away from the pinned network.
 
-**Allow AirDrop for 10 Minutes** appears while you are on a hotspot. **Settings…** (⌘,) opens a
-window for the login item, the command line tool, hotspots and remembered networks. **Hide Menu Bar
-Icon** keeps Hotspotly running without the icon; open the app again to get to its settings. The icon's router is filled while
-you are on a hotspot. The menu follows the system language (English or Traditional Chinese).
+**Allow AirDrop for 10 Minutes** appears while you are on a hotspot. The icon's router is filled
+while you are on one. **Settings…** (⌘,) opens the window described below.
 
-**Updates.** Hotspotly checks for a new version once a day and offers it in the menu, or right
-away with **Check for Updates…**. Updates come from this repository's releases, are signed, and
-install with one click. Turn off **Check for Updates Automatically** under **Settings… → About**
-to check only by hand.
+### Hotspots
 
-**Pinning.** Pick a network under **Pin Network** and Hotspotly pulls the Mac back whenever it
-wanders off, trying a few times before giving up. It needs the Wi-Fi password once: type it, or
-choose **Use Password Saved on This Mac…** and enter your Mac password so Hotspotly can read the one
-macOS saved. It keeps the password in your login keychain, so rejoining asks for nothing. It cannot wake
-an iPhone hotspot that has stopped advertising; the built-in Wi-Fi menu can.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hotspots-dark.png">
+    <img src="docs/screenshots/hotspots-light.png" width="520" alt="Settings, Hotspots tab: where to turn off AWDL, and a hotspot marked by hand">
+  </picture>
+</p>
 
-**Remembered networks.** **Settings… → Networks** lists every network the Mac remembers, with its
-security (open and WEP networks in orange), when the Mac was last on it and how well it worked.
-Select several and click **Forget…** to remove them with one administrator prompt. macOS keeps its
-own join dates where only root with Full Disk Access can read them, so Hotspotly records its own,
-starting when you install it.
+**Turn Off AWDL** chooses where Hotspotly turns AWDL off: on hotspots (the default), on all
+networks, or never. iPhone hotspots are detected automatically; connect to an Android phone or a
+pocket router and click **Mark as Hotspot** to treat it as one.
 
-Android phones and pocket routers are not detected as hotspots; mark them with **Mark as Hotspot**
-under **Settings… → Hotspots**. Quitting Hotspotly turns AWDL back on. The log is at
+### Pinning a network
+
+Pick a network under **Pin Network** and Hotspotly pulls the Mac back whenever it wanders off,
+trying a few times before giving up. It needs the Wi-Fi password once: type it, or choose **Use
+Password Saved on This Mac…** and enter your Mac password so Hotspotly can read the one macOS saved.
+It keeps the password in your login keychain, so rejoining asks for nothing. It cannot wake an
+iPhone hotspot that has stopped advertising; the built-in Wi-Fi menu can.
+
+### Remembered networks
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/networks-dark.png">
+    <img src="docs/screenshots/networks-light.png" width="720" alt="Settings, Networks tab: remembered networks with security, last connected and quality">
+  </picture>
+</p>
+
+**Settings… → Networks** lists every network the Mac remembers, with its security (open and WEP
+networks in orange), when the Mac was last on it and how well it worked. Select several and click
+**Forget…** to remove them with one administrator prompt. macOS keeps its own join dates where only
+root with Full Disk Access can read them, so Hotspotly records its own, starting when you install it.
+
+### Updates
+
+Hotspotly checks for a new version once a day and offers it in the menu, or right away with **Check
+for Updates…**. Updates come from this repository's releases, are signed, and install with one
+click. **Settings… → About** turns automatic checks and installs on or off.
+
+### More
+
+**Hide Menu Bar Icon** under **Settings… → General** keeps Hotspotly running without the icon; open
+the app again to get to its settings. Quitting Hotspotly turns AWDL back on. The log is at
 `~/Library/Logs/hotspotly.log`.
 
 ## What is AWDL?
