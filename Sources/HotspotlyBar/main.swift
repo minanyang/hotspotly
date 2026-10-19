@@ -434,14 +434,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Same as `hotspotly pin <ssid>`: one join, and the password is saved only if it works.
     func switchAndPin(_ network: String) {
-        let saved = Keychain.password(for: network)
-        guard let password = saved ?? askPassword(for: network) else { return }
+        if let saved = Keychain.password(for: network) { return join(network, password: saved, save: false) }
+        let open = Net.rememberedNetworks().first { $0.ssid == network }?.security == CWSecurity.none
+        switch askPassword(for: network, offerSaved: !open) {
+        case .typed(let password):
+            join(network, password: password, save: true)
+        case .saved:
+            // The system prompt blocks until answered; cancelling it falls back to typing.
+            DispatchQueue.global().async {
+                let password = Keychain.systemPassword(for: network)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    if let password { return self.join(network, password: password, save: true) }
+                    if case .typed(let typed) = self.askPassword(for: network, offerSaved: false) {
+                        self.join(network, password: typed, save: true)
+                    }
+                }
+            }
+        case nil:
+            return
+        }
+    }
+
+    func join(_ network: String, password: String, save: Bool) {
         DispatchQueue.global().async {
             let result = Net.join(network, password: password)
             DispatchQueue.main.async {
                 switch result {
                 case .success(let mac):
-                    if saved == nil { Keychain.save(password, for: network) }
+                    if save { Keychain.save(password, for: network) }
                     Store.updateConfig { $0.pin = Config.Pin(ssid: network, gatewayMAC: mac) }
                     Store.log("pinned '\(network)' (gateway \(mac))")
                 case .failure(let error):
@@ -456,7 +477,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    func askPassword(for network: String) -> String? {
+    enum PasswordChoice {
+        case typed(String)
+        /// Read the password macOS saved, which asks for the user's password.
+        case saved
+    }
+
+    func askPassword(for network: String, offerSaved: Bool) -> PasswordChoice? {
         let alert = NSAlert()
         alert.messageText = L("Wi-Fi password for “\(network)”")
         alert.informativeText = L("Leave it empty for an open network. It is kept in your login keychain once the join works.")
@@ -464,9 +491,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         alert.accessoryView = field
         alert.addButton(withTitle: L("Join"))
         alert.addButton(withTitle: L("Cancel"))
+        if offerSaved { alert.addButton(withTitle: L("Use Password Saved on This Mac…")) }
         alert.window.initialFirstResponder = field
         NSApp.activate(ignoringOtherApps: true)
-        return alert.runModal() == .alertFirstButtonReturn ? field.stringValue : nil
+        switch alert.runModal() {
+        case .alertFirstButtonReturn: return .typed(field.stringValue)
+        case .alertThirdButtonReturn: return .saved
+        default: return nil
+        }
     }
 
     func showSettings() {

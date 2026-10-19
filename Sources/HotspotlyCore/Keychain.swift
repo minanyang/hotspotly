@@ -12,6 +12,14 @@ public enum Keychain {
         return result.status == 0 ? result.output : nil
     }
 
+    /// The password macOS saved when the Mac joined `ssid`. macOS asks for the user's password on
+    /// every read and offers no "Always Allow", so read it once, when pinning.
+    public static func systemPassword(for ssid: String) -> String? {
+        let result = sh("/usr/bin/security", ["find-generic-password", "-D", "AirPort network password",
+                                              "-a", ssid, "-w", "/Library/Keychains/System.keychain"])
+        return result.status == 0 ? result.output : nil
+    }
+
     public static func save(_ password: String, for ssid: String) {
         sh("/usr/bin/security", ["add-generic-password", "-U", "-s", service, "-a", ssid, "-w", password])
     }
