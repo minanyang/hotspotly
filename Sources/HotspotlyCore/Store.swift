@@ -75,12 +75,31 @@ public struct Status: Codable {
     public var isStale: Bool { Date().timeIntervalSince(updated) > 30 }
 }
 
+/// What Hotspotly has seen of one network since it was installed. macOS keeps its own join dates,
+/// but only root with Full Disk Access can read them.
+public struct NetworkRecord: Codable {
+    public var lastConnected: Date
+    public var sent = 0
+    public var received = 0
+    /// Sum over the received replies, so the average stays exact as rounds add up.
+    public var roundTripMs = 0.0
+    public var rssiSum = 0
+    public var rssiCount = 0
+    /// Times the router stopped answering keepalive pings.
+    public var dropouts = 0
+
+    public var latencyMs: Double? { received > 0 ? roundTripMs / Double(received) : nil }
+    public var packetLoss: Double? { sent > 0 ? 1 - Double(received) / Double(sent) : nil }
+    public var rssi: Int? { rssiCount > 0 ? rssiSum / rssiCount : nil }
+}
+
 public enum Store {
     static let home = FileManager.default.homeDirectoryForCurrentUser
     public static let dir = home.appendingPathComponent("Library/Application Support/hotspotly")
     public static let logURL = home.appendingPathComponent("Library/Logs/hotspotly.log")
     static let configURL = dir.appendingPathComponent("config.json")
     static let statusURL = dir.appendingPathComponent("status.json")
+    static let historyURL = dir.appendingPathComponent("history.json")
 
     public static func loadConfig() -> Config {
         read(Config.self, from: configURL) ?? Config()
@@ -98,6 +117,17 @@ public enum Store {
 
     static func saveStatus(_ status: Status) {
         write(status, to: statusURL)
+    }
+
+    /// Keyed by network name, to match the list of networks macOS remembers.
+    public static func loadHistory() -> [String: NetworkRecord] {
+        read([String: NetworkRecord].self, from: historyURL) ?? [:]
+    }
+
+    public static func updateHistory(_ change: (inout [String: NetworkRecord]) -> Void) {
+        var history = loadHistory()
+        change(&history)
+        write(history, to: historyURL)
     }
 
     public static func log(_ message: String) {

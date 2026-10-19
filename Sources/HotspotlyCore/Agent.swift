@@ -27,6 +27,7 @@ public final class Agent {
     var probedGateway: String?
     /// Rounds before latency and loss are shown: one lost ping in the first round would read as 33%.
     let minRounds = 3
+    var wasSilent = false
     /// The hotspot's gateway MAC and the Wi-Fi byte count when the Mac joined it.
     var hotspotStart: (mac: String, bytes: Int64)? = Store.loadStatus().flatMap { status in
         // Carried over from the previous run, if it was on a hotspot.
@@ -64,9 +65,13 @@ public final class Agent {
             probes = []
             probedGateway = gateway
         }
-        if let gateway { probes = (probes + [Net.probe(gateway)]).suffix(6) }
+        let probe = gateway.map { Net.probe($0) }
+        if let probe { probes = (probes + [probe]).suffix(6) }
         let mac = gateway.flatMap(Net.mac(of:))
         let onHotspot = gateway == Net.iPhoneGateway || mac.map(config.hotspotMACs.contains) == true
+        let silent = probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 }
+        if let probe, let ssid = Net.ssid() { record(probe, on: ssid, silent: silent) }
+        wasSilent = silent
 
         handleAWDL(down: config.turnsOffAWDL(onHotspot: onHotspot) && !config.paused && !config.awdlAllowed)
         let onPin = config.paused ? nil : handlePin(config.pin, currentMAC: mac)
@@ -80,9 +85,26 @@ public final class Agent {
             awdlDown: !Net.awdlIsUp(), onPin: onPin, lastEvent: lastEvent,
             latencyMs: measured && received > 0 ? roundTrips / Double(received) : nil,
             packetLoss: measured && sent > 0 ? 1 - Double(received) / Double(sent) : nil,
-            gatewaySilent: probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 },
+            gatewaySilent: silent,
             hotspotBytes: hotspotBytes(onHotspot: onHotspot, gateway: gateway, mac: mac),
             hotspotStartBytes: hotspotStart?.bytes))
+    }
+
+    func record(_ probe: Net.Probe, on ssid: String, silent: Bool) {
+        let rssi = Net.rssi()
+        Store.updateHistory { history in
+            var entry = history[ssid] ?? NetworkRecord(lastConnected: Date())
+            entry.lastConnected = Date()
+            entry.sent += probe.sent
+            entry.received += probe.received
+            entry.roundTripMs += (probe.averageMs ?? 0) * Double(probe.received)
+            if let rssi {
+                entry.rssiSum += rssi
+                entry.rssiCount += 1
+            }
+            if silent && !wasSilent { entry.dropouts += 1 }
+            history[ssid] = entry
+        }
     }
 
     /// Counted from joining the hotspot. A moment without a gateway keeps the count going; another

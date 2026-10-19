@@ -36,6 +36,12 @@ public enum Setup {
         try asAdmin("/bin/rm -f \(cliLinkPath)")
     }
 
+    /// Forgets several remembered networks under one administrator prompt.
+    public static func forget(_ ssids: [String]) throws {
+        try asAdmin(ssids.map { "/usr/sbin/networksetup -removepreferredwirelessnetwork \(Net.wifiDevice) \(quoted($0))" }
+            .joined(separator: "; "))
+    }
+
     /// Removes everything outside the app bundle that needs root, in one prompt. awdl0 comes back up
     /// in the same root command: once the rule is gone the agent can no longer bring it down again.
     public static func removeAll(cli: String) throws {

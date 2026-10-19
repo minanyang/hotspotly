@@ -12,6 +12,7 @@ final class SettingsModel: ObservableObject {
     @Published private(set) var openAtLogin = false
     @Published private(set) var cliLinked = false
     @Published private(set) var ruleInstalled = false
+    @Published private(set) var networks: [NetworkRow] = []
 
     let cliPath: String
     /// Set by the app delegate, which owns the agent and the administrator prompts.
@@ -32,6 +33,22 @@ final class SettingsModel: ObservableObject {
         openAtLogin = SMAppService.mainApp.status == .enabled
         cliLinked = Setup.cliIsLinked(to: cliPath)
         ruleInstalled = Setup.isRuleInstalled
+    }
+
+    /// Separate from `reload`, which runs after every change: a Mac can remember hundreds of networks.
+    func loadNetworks() {
+        let history = Store.loadHistory()
+        networks = Net.rememberedNetworks().map { NetworkRow(network: $0, record: history[$0.ssid]) }
+    }
+
+    func forget(_ ssids: Set<String>) {
+        let list = Array(ssids)
+        asAdmin(L("Could not forget the networks"), { try Setup.forget(list) }) { [weak self] in
+            Store.updateHistory { history in for ssid in list { history[ssid] = nil } }
+            if let pin = self?.config.pin, ssids.contains(pin.ssid) { self?.update { $0.pin = nil } }
+            Store.log("forgot \(list.count) network(s)")
+            self?.loadNetworks()
+        }
     }
 
     func update(_ change: (inout Config) -> Void) {
@@ -150,6 +167,95 @@ struct HotspotsTab: View {
     }
 }
 
+/// A remembered network, with what Hotspotly has seen of it.
+struct NetworkRow: Identifiable {
+    let network: Net.RememberedNetwork
+    let record: NetworkRecord?
+
+    var id: String { network.ssid }
+    var name: String { network.ssid }
+    /// Sorts networks without a record last.
+    var lastConnected: Date { record?.lastConnected ?? .distantPast }
+
+    var security: String {
+        switch network.security {
+        case .none: L("Open")
+        case .WEP, .dynamicWEP: "WEP"
+        case .wpaPersonal: "WPA"
+        case .wpaPersonalMixed: "WPA/WPA2"
+        case .wpa2Personal, .personal: "WPA2"
+        case .wpa3Personal: "WPA3"
+        case .wpa3Transition: "WPA2/WPA3"
+        case .OWE, .oweTransition: L("Enhanced Open")
+        case .wpaEnterprise, .wpaEnterpriseMixed, .wpa2Enterprise, .enterprise, .wpa3Enterprise: L("Enterprise")
+        default: "—"
+        }
+    }
+
+    /// Anyone nearby can read the traffic, or crack the password in minutes.
+    var insecure: Bool { [.none, .WEP, .dynamicWEP].contains(network.security) }
+
+    var quality: String {
+        guard let record, let latency = record.latencyMs, let loss = record.packetLoss else { return "" }
+        var parts = ["\(Int(latency.rounded())) ms", L("\(Int((loss * 100).rounded()))% loss")]
+        if let rssi = record.rssi { parts.append("\(rssi) dBm") }
+        if record.dropouts > 0 { parts.append(L("\(record.dropouts) dropouts")) }
+        return parts.joined(separator: " · ")
+    }
+}
+
+struct NetworksTab: View {
+    @ObservedObject var model: SettingsModel
+    @State private var filter = ""
+    @State private var selection = Set<String>()
+    @State private var sortOrder = [KeyPathComparator(\NetworkRow.lastConnected, order: .reverse)]
+    @State private var confirming = false
+
+    var rows: [NetworkRow] {
+        model.networks
+            .filter { filter.isEmpty || $0.name.localizedCaseInsensitiveContains(filter) }
+            .sorted(using: sortOrder)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField(L("Filter"), text: $filter).textFieldStyle(.roundedBorder)
+            Table(rows, selection: $selection, sortOrder: $sortOrder) {
+                TableColumn(L("Name"), value: \.name)
+                TableColumn(L("Security"), value: \.security) { row in
+                    Text(row.security).foregroundStyle(row.insecure ? .orange : .primary)
+                }
+                .width(90)
+                TableColumn(L("Last Connected"), value: \.lastConnected) { row in
+                    if let date = row.record?.lastConnected {
+                        Text(date, format: .relative(presentation: .named))
+                    } else {
+                        Text(L("No record")).foregroundStyle(.secondary)
+                    }
+                }
+                .width(110)
+                TableColumn(L("Quality")) { row in Text(row.quality).foregroundStyle(.secondary) }
+            }
+            HStack {
+                Text(L("\(model.networks.count) networks. Last connected and quality are recorded by Hotspotly from when it was installed."))
+                    .font(.callout).foregroundStyle(.secondary)
+                Spacer()
+                Button(L("Forget…")) { confirming = true }.disabled(selection.isEmpty)
+            }
+        }
+        .padding()
+        .frame(width: 680, height: 440)
+        .confirmationDialog(L("Forget \(selection.count) networks?"), isPresented: $confirming) {
+            Button(L("Forget"), role: .destructive) {
+                model.forget(selection)
+                selection = []
+            }
+        } message: {
+            Text(L("The Mac stops joining them automatically. This needs an administrator password."))
+        }
+    }
+}
+
 struct AboutTab: View {
     var body: some View {
         VStack(spacing: 8) {
@@ -176,12 +282,15 @@ final class SettingsWindow {
 
     func show() {
         model.reload()
+        // Before the table appears: rows arriving afterwards leave it scrolled partway down.
+        model.loadNetworks()
         if window == nil {
             let tabs = NSTabViewController()
             tabs.tabStyle = .toolbar
             for (title, symbol, view) in [
                 (L("General"), "gearshape", AnyView(GeneralTab(model: model))),
                 (L("Hotspots"), "personalhotspot", AnyView(HotspotsTab(model: model))),
+                (L("Networks"), "wifi", AnyView(NetworksTab(model: model))),
                 (L("About"), "info.circle", AnyView(AboutTab())),
             ] {
                 let hosting = NSHostingController(rootView: view)

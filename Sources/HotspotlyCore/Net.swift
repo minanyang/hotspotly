@@ -1,3 +1,4 @@
+import CoreWLAN
 import Foundation
 
 public enum Net {
@@ -51,6 +52,16 @@ public enum Net {
         return mac.contains(":") ? mac : nil
     }
 
+    /// nil without location access, which macOS requires for the name; the menu bar app has it,
+    /// `hotspotly run` does not.
+    public static func ssid() -> String? {
+        CWWiFiClient.shared().interface()?.ssid()
+    }
+
+    public static func rssi() -> Int? {
+        CWWiFiClient.shared().interface().map { $0.rssiValue() }.flatMap { $0 == 0 ? nil : $0 }
+    }
+
     /// Bytes received plus sent on the Wi-Fi interface since boot. netstat shows the 64-bit counters;
     /// getifaddrs only has 32-bit ones, which wrap at 4 GB.
     public static func wifiBytes() -> Int64? {
@@ -62,6 +73,20 @@ public enum Net {
         guard fields.count >= 6, let received = Int64(fields[fields.count - 5]),
               let sent = Int64(fields[fields.count - 2]) else { return nil }
         return received + sent
+    }
+
+    public struct RememberedNetwork {
+        public let ssid: String
+        public let security: CWSecurity
+    }
+
+    /// The networks macOS remembers, in its auto-join order. Unlike the current SSID these names
+    /// need no location access.
+    public static func rememberedNetworks() -> [RememberedNetwork] {
+        let profiles = CWWiFiClient.shared().interface()?.configuration()?.networkProfiles.array as? [CWNetworkProfile] ?? []
+        return profiles.compactMap { profile in
+            profile.ssid.map { RememberedNetwork(ssid: $0, security: profile.security) }
+        }
     }
 
     public static func awdlIsUp() -> Bool {
