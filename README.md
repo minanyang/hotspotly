@@ -36,15 +36,16 @@ Hotspotly is a menu bar app that, every 10 seconds:
 Requires macOS 13 (Ventura) or later.
 
 1. Download [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip),
-   unzip it and drag **Hotspotly** to Applications.
-2. Open it. Hotspotly is not notarized yet, so macOS blocks it the first time: open
-   **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
-3. Click **Continue** when it asks to finish setup, and enter your password (see
+   unzip it, drag **Hotspotly** to Applications and open it. It is signed with a Developer ID and
+   notarized by Apple.
+2. Click **Continue** when it asks to finish setup, and enter your password (see
    [Permissions](#permissions)).
-4. Allow Location when asked, so the menu can show network names.
-5. Turn on **Open at Login** under **Settings… → General** in its menu.
+3. Allow Location when asked, so the menu can show network names.
+4. Turn on **Open at Login** under **Settings… → General** in its menu.
 
-Or, from a terminal (skips the Gatekeeper step):
+Later versions update from inside the app; see **Updates** under [Using it](#using-it).
+
+Or, from a terminal:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/minanyang/hotspotly/main/install.sh | bash
@@ -57,7 +58,7 @@ Requires the Xcode Command Line Tools.
 ```sh
 git clone https://github.com/minanyang/hotspotly
 cd hotspotly
-make install          # builds Hotspotly.app into /Applications
+make install          # builds Hotspotly.app into /Applications; the first build downloads Sparkle
 open /Applications/Hotspotly.app
 ```
 
@@ -76,6 +77,11 @@ are two lights, like the two on the icon's router:
 window for the login item, the command line tool, hotspots and remembered networks. **Hide Menu Bar
 Icon** keeps Hotspotly running without the icon; open the app again to get to its settings. The icon's router is filled while
 you are on a hotspot. The menu follows the system language (English or Traditional Chinese).
+
+**Updates.** Hotspotly checks for a new version once a day and offers it in the menu, or right
+away with **Check for Updates…**. Updates come from this repository's releases, are signed, and
+install with one click. Turn off **Check for Updates Automatically** under **Settings… → About**
+to check only by hand.
 
 **Pinning.** Pick a network under **Pin Network** and Hotspotly pulls the Mac back whenever it
 wanders off, trying a few times before giving up. It needs the Wi-Fi password once: type it, or
@@ -146,6 +152,9 @@ The commands change the running app's settings; they need the app to be running,
   It never reads your location.
 - **Login keychain.** Passwords of networks you pin from Hotspotly, under
   `io.github.minanyang.hotspotly`.
+- **Network.** Besides pinging your router, Hotspotly fetches `appcast.xml` from
+  `raw.githubusercontent.com` once a day to look for updates, so GitHub sees a request from your IP
+  address. Nothing else is sent.
 
 ## Uninstall
 
@@ -156,7 +165,8 @@ Settings live in `~/Library/Application Support/hotspotly`.
 
 ## License
 
-The code is released under the [MIT License](LICENSE).
+The code is released under the [MIT License](LICENSE). In-app updates use
+[Sparkle](https://sparkle-project.org) (MIT License); its license ships in the app as `Sparkle-LICENSE`.
 
 The Hotspotly name and logo are not covered by the MIT License. The logo artwork
 (`Resources/AppIcon.icns`, `Resources/MenuBarIcon.pdf`, `Resources/MenuBarIconFilled.pdf`, `docs/icon.png`)

@@ -30,13 +30,14 @@ Hotspotly 是一個選單列 app，每 10 秒會做這些事：
 
 需要 macOS 13（Ventura）或更新版本。
 
-1. 下載 [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip)，解壓縮後把 **Hotspotly** 拖進「應用程式」。
-2. 打開它。Hotspotly 目前沒有經過 Apple 公證，所以第一次打開時 macOS 會擋下來：到「**系統設定 → 隱私權與安全性**」，捲到最下面，按「**仍要打開**」。
-3. 出現「完成 Hotspotly 的設定」的詢問時按「**繼續**」，輸入你的密碼（原因見[權限](#權限)）。
-4. 詢問位置權限時按「允許」，選單才能顯示網路名稱。
-5. 在選單的「**設定… → 一般**」打開「**登入時開啟**」。
+1. 下載 [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip)，解壓縮後把 **Hotspotly** 拖進「應用程式」並打開。它有 Developer ID 簽章，也經過 Apple 公證。
+2. 出現「完成 Hotspotly 的設定」的詢問時按「**繼續**」，輸入你的密碼（原因見[權限](#權限)）。
+3. 詢問位置權限時按「允許」，選單才能顯示網路名稱。
+4. 在選單的「**設定… → 一般**」打開「**登入時開啟**」。
 
-熟悉終端機的話，也可以用一行指令安裝（不會遇到第 2 步的安全性警告）：
+之後的版本可以直接在 app 裡更新，見[使用方式](#使用方式)裡的「**更新**」。
+
+熟悉終端機的話，也可以用一行指令安裝：
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/minanyang/hotspotly/main/install.sh | bash
@@ -49,7 +50,7 @@ curl -fsSL https://raw.githubusercontent.com/minanyang/hotspotly/main/install.sh
 ```sh
 git clone https://github.com/minanyang/hotspotly
 cd hotspotly
-make install          # 編譯 Hotspotly.app 並放進「應用程式」
+make install          # 編譯 Hotspotly.app 並放進「應用程式」；第一次編譯會下載 Sparkle
 open /Applications/Hotspotly.app
 ```
 
@@ -61,6 +62,8 @@ open /Applications/Hotspotly.app
 - **保護**：AWDL 已關閉、在釘選的網路上。橘燈表示正在允許 AirDrop，或 Mac 離開了釘選的網路。
 
 連著熱點時會出現「**允許 AirDrop 10 分鐘**」。「**設定…**」（⌘,）會打開一個視窗，裡面有登入時開啟、命令列工具、熱點和記住的網路。「**隱藏選單列圖示**」會讓 Hotspotly 在沒有圖示的情況下繼續執行，要看設定時從「應用程式」再打開它一次。連著熱點時，圖示的路由器會變成實心。選單會跟著系統語言顯示繁體中文或英文。
+
+**更新。** Hotspotly 每天會檢查一次有沒有新版本，有的話會出現在選單裡；也可以按「**檢查更新…**」馬上檢查。更新檔來自這個 repo 的 release，經過簽名驗證，按一下就能安裝。如果只想手動檢查，可以在「**設定… → 關於**」關掉「**自動檢查更新**」。
 
 **釘選網路。** 在「**釘選網路**」選一個網路，Mac 跑到別的網路時，Hotspotly 會把它拉回來，試幾次不成功就會停止。第一次需要 Wi-Fi 密碼：直接輸入，或按「**使用這台 Mac 儲存的密碼…**」並輸入 Mac 的登入密碼，讓 Hotspotly 讀取 macOS 存的那份。密碼會存在你的登入鑰匙圈，之後自動連回不會再詢問。iPhone 熱點停止廣播後，Hotspotly 叫不醒它，內建的 Wi-Fi 選單可以。
 
@@ -105,6 +108,7 @@ hotspotly run                    不開 app，在前景執行背景迴圈（開�
 - **設定時輸入一次管理員密碼。** 關掉 AWDL 需要 root 權限。Hotspotly 不會用 root 執行任何程式，而是在設定時加入 `/etc/sudoers.d/hotspotly`，讓你的帳號可以不用密碼執行兩個指令，而且只有這兩個：`/sbin/ifconfig awdl0 down` 和 `/sbin/ifconfig awdl0 up`。如果跳過這一步，keepalive 和釘選網路照常能用，選單會一直顯示「**完成設定…**」，直到你完成設定，或在「**設定… → 熱點**」把「**關閉 AWDL**」設成「**永不**」。
 - **位置（選用）。** macOS 不讓沒有位置權限的 app 讀取 Wi-Fi 名稱。允許後，選單會顯示目前的網路名稱；不允許也不影響功能，因為 Hotspotly 是用閘道的 MAC 位址來辨認網路，macOS 不會隱藏這個資訊。它不會讀取你的位置。
 - **登入鑰匙圈。** 你透過 Hotspotly 釘選的網路密碼，存在 `io.github.minanyang.hotspotly` 底下。
+- **網路。** 除了 ping 你的路由器，Hotspotly 每天會從 `raw.githubusercontent.com` 讀取一次 `appcast.xml` 來檢查更新，所以 GitHub 會看到來自你 IP 位址的請求。除此之外不會傳送任何資料。
 
 ## 移除
 
@@ -114,6 +118,6 @@ hotspotly run                    不開 app，在前景執行背景迴圈（開�
 
 ## 授權
 
-程式碼以 [MIT License](LICENSE) 授權。
+程式碼以 [MIT License](LICENSE) 授權。App 內更新使用 [Sparkle](https://sparkle-project.org)（MIT License），它的授權條款以 `Sparkle-LICENSE` 隨 app 一起提供。
 
 Hotspotly 的名稱和 logo 不在 MIT License 的授權範圍內。logo 圖檔（`Resources/AppIcon.icns`、`Resources/MenuBarIcon.pdf`、`Resources/MenuBarIconFilled.pdf`、`docs/icon.png`）以及繪製 logo 的 script（`scripts/make-icons.swift`）© 2026 Min-An Yang (minanyang)，保留所有權利。fork 和衍生作品必須使用不同的名稱和 logo；註明「基於 Hotspotly」則沒有問題。
