@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Hotspotly</title>
+    <link>https://github.com/minanyang/hotspotly</link>
+    <item>
+      <title>Hotspotly 0.5.0</title>
+      <pubDate>Mon, 19 Oct 2026 19:20:18 +0000</pubDate>
+      <sparkle:version>0.5.0</sparkle:version>
+      <sparkle:shortVersionString>0.5.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/minanyang/hotspotly/releases/tag/v0.5.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<h3>Hotspotly 0.5.0</h3>
+<ul>
+  <li><b>Networks tab:</b> every network your Mac remembers, with its security, when you last used it and how well it worked. Forget several at once.</li>
+  <li><b>Data used</b> on a hotspot, in the menu.</li>
+  <li><b>Pin with the password saved on this Mac</b>, instead of typing the Wi-Fi password.</li>
+  <li><b>Hide the menu bar icon</b> and keep Hotspotly running.</li>
+  <li><b>Signed and notarized</b>, and updated from inside the app from now on.</li>
+</ul>
+<h3>繁體中文</h3>
+<ul>
+  <li><b>網路分頁：</b>列出 Mac 記住的所有網路，包括安全性、上次連線和連線品質，可以一次忘記好幾個。</li>
+  <li>選單會顯示熱點的<b>已用流量</b>。</li>
+  <li>釘選網路時可以<b>使用這台 Mac 儲存的密碼</b>，不用再輸入 Wi-Fi 密碼。</li>
+  <li>可以<b>隱藏選單列圖示</b>，Hotspotly 繼續在背景執行。</li>
+  <li><b>經過簽章和 Apple 公證</b>，之後可以直接在 app 裡更新。</li>
+</ul>]]></description>
+      <enclosure url="https://github.com/minanyang/hotspotly/releases/download/v0.5.0/Hotspotly.zip" type="application/octet-stream" sparkle:edSignature="ddhs+Ec49Vu4SY92SaolPBoLM8GyapfFLh9odtsXITR1PkmlSiGVNfPy3y1V3XMR8zShPVlJSCI7BW0XL1vNDQ==" length="1491448"/>
+    </item>
+  </channel>
+</rss>
