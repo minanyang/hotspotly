@@ -67,19 +67,27 @@ Everything is in the menu bar icon. The switch at the top turns Hotspotly off an
 are two lights, like the two on the icon's router:
 
 - **The network** you are on, with the latency and packet loss to its router over the last minute,
-  and the signal, channel and Wi-Fi standard underneath. Amber means loss or a slow router; red
-  means the router stopped answering.
+  and the signal, channel and Wi-Fi standard underneath; on a hotspot, also the data the Mac has
+  used since joining it. Amber means loss or a slow router; red means the router stopped answering.
 - **Protection**: AWDL off and on the pinned network. Amber means AirDrop is allowed or the Mac is
   away from the pinned network.
 
 **Allow AirDrop for 10 Minutes** appears while you are on a hotspot. **Settings…** (⌘,) opens a
-window for the login item, the command line tool and hotspots. The icon's router is filled while
+window for the login item, the command line tool, hotspots and remembered networks. **Hide Menu Bar
+Icon** keeps Hotspotly running without the icon; open the app again to get to its settings. The icon's router is filled while
 you are on a hotspot. The menu follows the system language (English or Traditional Chinese).
 
 **Pinning.** Pick a network under **Pin Network** and Hotspotly pulls the Mac back whenever it
-wanders off, trying a few times before giving up. It asks for the Wi-Fi password once and keeps it
-in your login keychain, because macOS does not share its own copy with other apps. It cannot wake
+wanders off, trying a few times before giving up. It needs the Wi-Fi password once: type it, or
+choose **Use Password Saved on This Mac…** and enter your Mac password so Hotspotly can read the one
+macOS saved. It keeps the password in your login keychain, so rejoining asks for nothing. It cannot wake
 an iPhone hotspot that has stopped advertising; the built-in Wi-Fi menu can.
+
+**Remembered networks.** **Settings… → Networks** lists every network the Mac remembers, with its
+security (open and WEP networks in orange), when the Mac was last on it and how well it worked.
+Select several and click **Forget…** to remove them with one administrator prompt. macOS keeps its
+own join dates where only root with Full Disk Access can read them, so Hotspotly records its own,
+starting when you install it.
 
 Android phones and pocket routers are not detected as hotspots; mark them with **Mark as Hotspot**
 under **Settings… → Hotspots**. Quitting Hotspotly turns AWDL back on. The log is at
