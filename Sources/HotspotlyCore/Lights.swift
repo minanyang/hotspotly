@@ -9,8 +9,9 @@ extension Status {
     /// Green while keepalive pings come back, amber with loss or delay, red when the gateway stops
     /// answering. Thresholds are a first guess; an iPhone may drop the odd ping on its own.
     public var connectionLight: Light {
-        guard gateway != nil, let loss = packetLoss else { return .off }
+        guard gateway != nil else { return .off }
         if gatewaySilent { return .red }
+        guard let loss = packetLoss else { return .off }
         if loss >= 0.15 || (latencyMs ?? 0) >= 150 { return .amber }
         return .green
     }

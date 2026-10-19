@@ -25,6 +25,8 @@ public final class Agent {
     /// The last minute of keepalive probes, for the Connection light; cleared when the gateway changes.
     var probes: [Net.Probe] = []
     var probedGateway: String?
+    /// Rounds before latency and loss are shown: one lost ping in the first round would read as 33%.
+    let minRounds = 3
     /// Lets the app tick right away after a menu change instead of up to 10 seconds later.
     let wakeUp = DispatchSemaphore(value: 0)
 
@@ -63,14 +65,15 @@ public final class Agent {
         handleAWDL(down: config.turnsOffAWDL(onHotspot: onHotspot) && !config.paused && !config.awdlAllowed)
         let onPin = config.paused ? nil : handlePin(config.pin, currentMAC: mac)
 
+        let measured = probes.count >= minRounds
         let sent = probes.reduce(0) { $0 + $1.sent }
         let received = probes.reduce(0) { $0 + $1.received }
         let roundTrips = probes.reduce(0.0) { $0 + ($1.averageMs ?? 0) * Double($1.received) }
         Store.saveStatus(Status(
             updated: Date(), gateway: gateway, gatewayMAC: mac, onHotspot: onHotspot,
             awdlDown: !Net.awdlIsUp(), onPin: onPin, lastEvent: lastEvent,
-            latencyMs: received > 0 ? roundTrips / Double(received) : nil,
-            packetLoss: sent > 0 ? 1 - Double(received) / Double(sent) : nil,
+            latencyMs: measured && received > 0 ? roundTrips / Double(received) : nil,
+            packetLoss: measured && sent > 0 ? 1 - Double(received) / Double(sent) : nil,
             gatewaySilent: probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 }))
     }
 
