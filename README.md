@@ -42,7 +42,7 @@ Requires macOS 13 (Ventura) or later.
 3. Click **Continue** when it asks to finish setup, and enter your password (see
    [Permissions](#permissions)).
 4. Allow Location when asked, so the menu can show network names.
-5. Turn on **Settings → Open at Login** in its menu.
+5. Turn on **Open at Login** under **Settings… → General** in its menu.
 
 Or, from a terminal (skips the Gatekeeper step):
 
@@ -63,18 +63,26 @@ open /Applications/Hotspotly.app
 
 ## Using it
 
-Everything is in the menu bar icon. The switch at the top turns Hotspotly off and on, and
-**Allow AirDrop for 10 Minutes** appears while you are on a hotspot. Rarely used options are under
-**Settings**. The icon's router is filled while you are on a hotspot. The menu follows the system
-language (English or Traditional Chinese).
+Everything is in the menu bar icon. The switch at the top turns Hotspotly off and on. Below it
+are two lights, like the two on the icon's router:
+
+- **The network** you are on, with the latency and packet loss to its router over the last minute,
+  and the signal, channel and Wi-Fi standard underneath. Amber means loss or a slow router; red
+  means the router stopped answering.
+- **Protection**: AWDL off and on the pinned network. Amber means AirDrop is allowed or the Mac is
+  away from the pinned network.
+
+**Allow AirDrop for 10 Minutes** appears while you are on a hotspot. **Settings…** (⌘,) opens a
+window for the login item, the command line tool and hotspots. The icon's router is filled while
+you are on a hotspot. The menu follows the system language (English or Traditional Chinese).
 
 **Pinning.** Pick a network under **Pin Network** and Hotspotly pulls the Mac back whenever it
 wanders off, trying a few times before giving up. It asks for the Wi-Fi password once and keeps it
 in your login keychain, because macOS does not share its own copy with other apps. It cannot wake
 an iPhone hotspot that has stopped advertising; the built-in Wi-Fi menu can.
 
-Android phones and pocket routers are not detected as hotspots; mark them with **Settings →
-Current Network Is a Hotspot**. Quitting Hotspotly turns AWDL back on. The log is at
+Android phones and pocket routers are not detected as hotspots; mark them with **Mark as Hotspot**
+under **Settings… → Hotspots**. Quitting Hotspotly turns AWDL back on. The log is at
 `~/Library/Logs/hotspotly.log`.
 
 ## What is AWDL?
@@ -84,14 +92,15 @@ behind AirDrop, Handoff, Universal Control and Sidecar. It shares the Mac's sing
 several times a second it takes the radio to another channel to look for nearby devices. A home
 router copes; a phone hotspot often shows latency spikes or drops the connection.
 
-Turning AWDL off fixes this but stops those features, so Hotspotly turns it off only on a hotspot,
-and again within milliseconds whenever macOS brings it back. **Allow AirDrop for 10 Minutes** and
-**Settings → Turn Off AWDL on Hotspots** let you keep it on. `ifconfig awdl0` shows `<UP,…>` when
+Turning AWDL off fixes this but stops those features, so by default Hotspotly turns it off only on a hotspot,
+and again within milliseconds whenever macOS brings it back. **Allow AirDrop for 10 Minutes** keeps it on
+for a while; **Turn Off AWDL** under **Settings… → Hotspots** chooses where it goes off: on
+hotspots (the default), on all networks, or never. `ifconfig awdl0` shows `<UP,…>` when
 it is on.
 
 ## Command line
 
-The app contains a `hotspotly` command. **Settings → Install Command Line Tool…** in the menu links it to
+The app contains a `hotspotly` command. **Settings… → General → Command line tool → Install…** links it to
 `/usr/local/bin/hotspotly`; or do it yourself:
 
 ```sh
@@ -108,7 +117,7 @@ hotspotly mark-hotspot           treat the current network as a hotspot
 hotspotly unmark-hotspot
 hotspotly pause
 hotspotly resume
-hotspotly awdl on|off            turn AWDL off on hotspots (on, the default) or leave it alone
+hotspotly awdl hotspots|all|never  where to turn AWDL off (hotspots, the default)
 hotspotly allow-awdl [minutes]   leave AWDL on for a while (default 10 minutes)
 hotspotly allow-awdl stop
 hotspotly run                    run the loop in the foreground instead of the app (development)
@@ -122,7 +131,7 @@ The commands change the running app's settings; they need the app to be running,
   anything as root, setup adds `/etc/sudoers.d/hotspotly`, which lets your user run exactly two
   commands without a password: `/sbin/ifconfig awdl0 down` and `/sbin/ifconfig awdl0 up`. If you
   skip it, keepalive and pinning still work; **Finish Setup…** stays in the menu until you do it
-  or turn off **Settings → Turn Off AWDL on Hotspots**.
+  or set **Turn Off AWDL** to **Never** under **Settings… → Hotspots**.
 - **Location (optional).** macOS hides Wi-Fi network names from apps without location access.
   With it, the menu shows the current network's name. Without it, everything still works:
   Hotspotly tells networks apart by their gateway's MAC address, which macOS does not hide.
@@ -132,7 +141,7 @@ The commands change the running app's settings; they need the app to be running,
 
 ## Uninstall
 
-Choose **Settings → Uninstall Hotspotly…** in the menu. It removes the sudoers rule, the command line link
+Choose **Uninstall Hotspotly…** under **Settings… → General**. It removes the sudoers rule, the command line link
 and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash.
 
 Settings live in `~/Library/Application Support/hotspotly`.
