@@ -27,6 +27,12 @@ public final class Agent {
     var probedGateway: String?
     /// Rounds before latency and loss are shown: one lost ping in the first round would read as 33%.
     let minRounds = 3
+    /// The hotspot's gateway MAC and the Wi-Fi byte count when the Mac joined it.
+    var hotspotStart: (mac: String, bytes: Int64)? = Store.loadStatus().flatMap { status in
+        // Carried over from the previous run, if it was on a hotspot.
+        guard let mac = status.gatewayMAC, let bytes = status.hotspotStartBytes else { return nil }
+        return (mac, bytes)
+    }
     /// Lets the app tick right away after a menu change instead of up to 10 seconds later.
     let wakeUp = DispatchSemaphore(value: 0)
 
@@ -74,7 +80,23 @@ public final class Agent {
             awdlDown: !Net.awdlIsUp(), onPin: onPin, lastEvent: lastEvent,
             latencyMs: measured && received > 0 ? roundTrips / Double(received) : nil,
             packetLoss: measured && sent > 0 ? 1 - Double(received) / Double(sent) : nil,
-            gatewaySilent: probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 }))
+            gatewaySilent: probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 },
+            hotspotBytes: hotspotBytes(onHotspot: onHotspot, gateway: gateway, mac: mac),
+            hotspotStartBytes: hotspotStart?.bytes))
+    }
+
+    /// Counted from joining the hotspot. A moment without a gateway keeps the count going; another
+    /// network ends it.
+    func hotspotBytes(onHotspot: Bool, gateway: String?, mac: String?) -> Int64? {
+        guard onHotspot else {
+            if gateway != nil { hotspotStart = nil }
+            return nil
+        }
+        guard let mac, let bytes = Net.wifiBytes() else { return nil }
+        // A lower count means the counters restarted.
+        if let start = hotspotStart, start.mac == mac, start.bytes <= bytes { return bytes - start.bytes }
+        hotspotStart = (mac, bytes)
+        return 0
     }
 
     func handleAWDL(down: Bool) {

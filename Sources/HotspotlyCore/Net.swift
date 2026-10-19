@@ -51,6 +51,19 @@ public enum Net {
         return mac.contains(":") ? mac : nil
     }
 
+    /// Bytes received plus sent on the Wi-Fi interface since boot. netstat shows the 64-bit counters;
+    /// getifaddrs only has 32-bit ones, which wrap at 4 GB.
+    public static func wifiBytes() -> Int64? {
+        // "en0 1500 <Link#14> 2e:01:… 15115000 0 14564809521 8046936 0 3548742692 0"
+        guard let line = sh("/usr/sbin/netstat", ["-ib", "-I", wifiDevice]).output
+            .components(separatedBy: "\n").first(where: { $0.contains("<Link#") }) else { return nil }
+        // Counted from the end: the address column can be empty.
+        let fields = line.split(separator: " ")
+        guard fields.count >= 6, let received = Int64(fields[fields.count - 5]),
+              let sent = Int64(fields[fields.count - 2]) else { return nil }
+        return received + sent
+    }
+
     public static func awdlIsUp() -> Bool {
         let firstLine = sh("/sbin/ifconfig", ["awdl0"]).output.components(separatedBy: "\n").first ?? ""
         return firstLine.contains("<UP")

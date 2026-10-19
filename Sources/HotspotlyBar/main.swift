@@ -285,7 +285,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         // The network with its light and readings, then the Protection light.
         let connection = row(menu, networkName(status, ssid: ssid), status.connectionLight, connectionDetail(status))
-        let readings = (status.gateway != nil ? linkReadings() : []).map { row(menu, $0.0, nil, $0.1) }
+        let readings = (status.gateway != nil ? linkReadings(status) : []).map { row(menu, $0.0, nil, $0.1) }
         let protection = row(menu, L("Protection"), status.protectionLight(config), protectionDetail(status, config: config))
         liveRows = (connection, readings, protection)
         menu.addItem(.separator())
@@ -350,8 +350,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return parts.isEmpty ? L("Not on a hotspot") : parts.joined(separator: " · ")
     }
 
-    /// Live readings for the current Wi-Fi link, read when the menu opens.
-    func linkReadings() -> [(String, String)] {
+    /// Live readings for the current Wi-Fi link, read when the menu opens, and the data used on a hotspot.
+    func linkReadings(_ status: Status) -> [(String, String)] {
         guard let wifi = CWWiFiClient.shared().interface(), wifi.rssiValue() != 0 else { return [] }
         let rssi = wifi.rssiValue(), noise = wifi.noiseMeasurement()
         var rows = [(L("Signal"), "\(rssi) dBm · SNR \(rssi - noise) dB")]
@@ -363,6 +363,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let standards = [1: "802.11a", 2: "802.11b", 3: "802.11g", 4: "Wi-Fi 4", 5: "Wi-Fi 5", 6: "Wi-Fi 6", 7: "Wi-Fi 7"]
         let standard = standards[wifi.activePHYMode().rawValue].map { "\($0) · " } ?? ""
         rows.append((L("Standard"), "\(standard)\(Int(wifi.transmitRate())) Mbps"))
+        if let bytes = status.hotspotBytes {
+            rows.append((L("Data used"), L("\(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)) since joining")))
+        }
         return rows
     }
 
@@ -497,7 +500,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let config = Store.loadConfig()
         let ssid = CWWiFiClient.shared().interface()?.ssid()
         live.connection.update(networkName(status, ssid: ssid), light: status.connectionLight, detail: connectionDetail(status))
-        let readings = status.gateway != nil ? linkReadings() : []
+        let readings = status.gateway != nil ? linkReadings(status) : []
         for (i, row) in live.readings.enumerated() {
             row.update(row.name, light: nil, detail: i < readings.count ? readings[i].1 : "—")
         }

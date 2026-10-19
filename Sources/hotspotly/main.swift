@@ -39,6 +39,9 @@ func printStatus() {
         let latency = status.latencyMs.map { "\(Int($0.rounded())) ms" } ?? "no reply"
         print("router:   \(latency), \(Int((loss * 100).rounded()))% loss over the last minute")
     }
+    if let bytes = status.hotspotBytes {
+        print("data:     \(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)) since joining this hotspot")
+    }
     var awdl = status.awdlDown ? "down" : "up"
     if config.awdlMode == .never {
         awdl += " (left alone: awdl never)"
