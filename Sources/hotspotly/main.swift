@@ -12,7 +12,8 @@ let usage = """
       mark-hotspot        treat the current network as a hotspot (iPhone hotspots are detected automatically)
       unmark-hotspot      stop treating the current network as a hotspot
       pause | resume      suspend or resume everything
-      awdl on | off       turn AWDL off on hotspots (on, the default) or leave it alone
+      awdl hotspots | all | never
+                          where to turn AWDL off (hotspots, the default)
       allow-awdl [min]    leave AWDL on for <min> minutes (default 10), e.g. for AirDrop
       allow-awdl stop     end that early
       run                 run the agent in the foreground instead of the app (for development)
@@ -34,9 +35,13 @@ func printStatus() {
     print("agent:    running\(config.paused ? ", paused" : "")")
     print("gateway:  \(status.gateway ?? "none") \(status.gatewayMAC.map { "(\($0))" } ?? "")")
     print("hotspot:  \(status.onHotspot ? "yes" : "no")")
+    if let loss = status.packetLoss {
+        let latency = status.latencyMs.map { "\(Int($0.rounded())) ms" } ?? "no reply"
+        print("router:   \(latency), \(Int((loss * 100).rounded()))% loss over the last minute")
+    }
     var awdl = status.awdlDown ? "down" : "up"
-    if !config.awdlOff {
-        awdl += " (left alone: awdl off)"
+    if config.awdlMode == .never {
+        awdl += " (left alone: awdl never)"
     } else if let until = config.awdlAllowedUntil, config.awdlAllowed {
         awdl += " (allowed until \(until.formatted(date: .omitted, time: .shortened)))"
     }
@@ -111,14 +116,19 @@ case "mark-hotspot":
     print("marked gateway \(mac) as a hotspot")
 case "unmark-hotspot":
     let mac = currentGatewayMAC()
-    Store.updateConfig { $0.hotspotMACs.removeAll { $0 == mac } }
+    Store.updateConfig {
+        $0.hotspotMACs.removeAll { $0 == mac }
+        $0.hotspotNames[mac] = nil
+    }
 case "pause":
     Store.updateConfig { $0.paused = true }
 case "resume":
     Store.updateConfig { $0.paused = false }
 case "awdl":
-    guard args.count == 2, ["on", "off"].contains(args[1]) else { fail("usage: hotspotly awdl on|off") }
-    Store.updateConfig { $0.awdlOff = args[1] == "on" }
+    guard args.count == 2, let mode = Config.AWDLMode(rawValue: args[1]) else {
+        fail("usage: hotspotly awdl hotspots|all|never")
+    }
+    Store.updateConfig { $0.awdlMode = mode }
 case "allow-awdl":
     if args.count == 2 && args[1] == "stop" {
         Store.updateConfig { $0.awdlAllowedUntil = nil }

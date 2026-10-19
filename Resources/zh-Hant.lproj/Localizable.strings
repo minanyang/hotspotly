@@ -15,13 +15,12 @@
 "Nearby" = "附近";
 "Other Remembered Networks" = "其他記住的網路";
 "Unpin" = "取消釘選";
-"Settings" = "設定";
-"Turn Off AWDL on Hotspots" = "在熱點上關閉 AWDL";
-"Current Network Is a Hotspot" = "目前的網路是熱點";
+"Turn Off AWDL" = "關閉 AWDL";
+"On Hotspots" = "在熱點上";
+"On All Networks" = "在所有網路上";
+"Never" = "永不";
 "Open at Login" = "登入時開啟";
 "Open Log" = "打開記錄檔";
-"Install Command Line Tool…" = "安裝命令列工具…";
-"Uninstall Command Line Tool…" = "移除命令列工具…";
 "Uninstall Hotspotly…" = "解除安裝 Hotspotly…";
 "Quit Hotspotly" = "結束 Hotspotly";
 
@@ -45,3 +44,36 @@
 "Wi-Fi password for “%@”" = "「%@」的 Wi-Fi 密碼";
 "Leave it empty for an open network. It is kept in your login keychain once the join works." = "開放網路請留空。連線成功後，密碼會存在你的登入鑰匙圈。";
 "Join" = "加入";
+
+/* Status lights and readings, Settings window (0.4.0) */
+"Protection" = "保護";
+"Measuring…" = "量測中…";
+"No reply from the router" = "路由器沒有回應";
+"no loss" = "沒有掉包";
+"%lld%% loss" = "掉包 %lld%%";
+"AWDL left on" = "AWDL 保持開啟";
+"AirDrop allowed · %lld min" = "允許 AirDrop · 剩 %lld 分鐘";
+"Not on a hotspot" = "不在熱點上";
+"Wi-Fi" = "Wi-Fi";
+"Signal" = "訊號";
+"Channel" = "頻道";
+"Standard" = "標準";
+"Settings…" = "設定…";
+"Close" = "關閉";
+"General" = "一般";
+"Hotspots" = "熱點";
+"About" = "關於";
+"Command line tool" = "命令列工具";
+"Not installed" = "尚未安裝";
+"Install…" = "安裝…";
+"Uninstall…" = "移除…";
+"Log" = "記錄檔";
+"AWDL is behind AirDrop, Universal Control and Sidecar, and makes phone hotspots drop. Turned off, those stop working until you allow AirDrop from the menu." = "AirDrop、通用控制和隨航都靠 AWDL，但它會讓手機熱點斷線。關掉後這些功能會停用，需要時可從選單暫時允許 AirDrop。";
+"Needs an administrator rule" = "需要管理員規則";
+"iPhone hotspots are detected automatically. Mark others here, such as Android phones and pocket routers." = "iPhone 熱點會自動偵測。其他熱點，例如 Android 手機和行動網卡，請在這裡標記。";
+"Current network" = "目前的網路";
+"Mark as Hotspot" = "標記為熱點";
+"Remove" = "移除";
+"Version %@" = "版本 %@";
+"Keeps your Mac steady on phone hotspots and Wi-Fi." = "讓 Mac 穩穩連在手機熱點和 Wi-Fi 上。";
+"MIT License" = "MIT 授權";

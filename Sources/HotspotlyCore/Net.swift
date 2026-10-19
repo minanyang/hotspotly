@@ -23,6 +23,25 @@ public enum Net {
         sh("/sbin/ping", ["-c", "1", "-t", "2", ip]).status == 0
     }
 
+    public struct Probe {
+        public let sent: Int
+        public let received: Int
+        /// Average round trip of the replies in milliseconds; nil when none came back.
+        public let averageMs: Double?
+    }
+
+    /// A few pings in a row, so loss can be measured as well; takes about a second.
+    public static func probe(_ ip: String, count: Int = 3) -> Probe {
+        let lines = sh("/sbin/ping", ["-c", "\(count)", "-i", "0.3", "-t", "2", ip]).output.components(separatedBy: "\n")
+        // "3 packets transmitted, 3 packets received, 0.0% packet loss"
+        let counts = lines.first { $0.contains("packets received") }?
+            .components(separatedBy: ", ").compactMap { Int($0.prefix { $0.isNumber }) } ?? []
+        // "round-trip min/avg/max/stddev = 3.305/4.678/8.889/2.103 ms"
+        let average = lines.first { $0.hasPrefix("round-trip") }?
+            .components(separatedBy: " = ").last?.components(separatedBy: "/").dropFirst().first.flatMap(Double.init)
+        return Probe(sent: counts.first ?? count, received: counts.count > 1 ? counts[1] : 0, averageMs: average)
+    }
+
     /// The router's MAC from the ARP cache. Unlike the SSID, macOS does not redact it.
     public static func mac(of ip: String) -> String? {
         // "? (172.20.10.1) at 12:34:56:78:9a:bc on en0 ifscope [ethernet]"

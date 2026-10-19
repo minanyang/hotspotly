@@ -1,6 +1,10 @@
 import Foundation
 
 public struct Config: Codable, Equatable {
+    public enum AWDLMode: String, Codable {
+        case hotspots, all, never
+    }
+
     public struct Pin: Codable, Equatable {
         /// Only a label: macOS hides the current SSID from the agent.
         public var ssid: String
@@ -16,13 +20,20 @@ public struct Config: Codable, Equatable {
     public var pin: Pin?
     /// Gateway MACs of networks the user marked as hotspots.
     public var hotspotMACs: [String] = []
+    /// Network names for `hotspotMACs`, when known; only the menu bar app can read them.
+    public var hotspotNames: [String: String] = [:]
     public var paused = false
-    /// Turn AWDL off while on a hotspot. Some prefer to keep Universal Control and friends.
-    public var awdlOff = true
+    /// Where to turn AWDL off. Some prefer to keep Universal Control and friends.
+    public var awdlMode = AWDLMode.hotspots
     /// Leaves AWDL alone until then, e.g. to use AirDrop on a hotspot for a few minutes.
     public var awdlAllowedUntil: Date?
 
     public var awdlAllowed: Bool { awdlAllowedUntil.map { $0 > Date() } == true }
+
+    /// Whether the current network is one where AWDL should be off, before pause and allowance.
+    public func turnsOffAWDL(onHotspot: Bool) -> Bool {
+        awdlMode == .all || (awdlMode == .hotspots && onHotspot)
+    }
 
     public init() {}
 
@@ -32,8 +43,9 @@ public struct Config: Codable, Equatable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         pin = try c.decodeIfPresent(Pin.self, forKey: .pin)
         hotspotMACs = try c.decodeIfPresent([String].self, forKey: .hotspotMACs) ?? hotspotMACs
+        hotspotNames = try c.decodeIfPresent([String: String].self, forKey: .hotspotNames) ?? hotspotNames
         paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? paused
-        awdlOff = try c.decodeIfPresent(Bool.self, forKey: .awdlOff) ?? awdlOff
+        awdlMode = try c.decodeIfPresent(AWDLMode.self, forKey: .awdlMode) ?? awdlMode
         awdlAllowedUntil = try c.decodeIfPresent(Date.self, forKey: .awdlAllowedUntil)
     }
 }
@@ -48,6 +60,12 @@ public struct Status: Codable {
     /// nil when nothing is pinned.
     public var onPin: Bool?
     public var lastEvent: String?
+    /// Over the last minute of keepalive pings; nil without a gateway or before the first reply.
+    public var latencyMs: Double?
+    /// 0...1 over the last minute of keepalive pings; nil without a gateway.
+    public var packetLoss: Double?
+    /// No reply to the last two rounds of keepalive pings.
+    public var gatewaySilent = false
 
     /// The agent ticks every 10 seconds; anything much older means it is not running.
     public var isStale: Bool { Date().timeIntervalSince(updated) > 30 }

@@ -22,6 +22,9 @@ public final class Agent {
     var notFoundStreak = 0
     var nextRejoin = Date.distantPast
     var lastEvent: String?
+    /// The last minute of keepalive probes, for the Connection light; cleared when the gateway changes.
+    var probes: [Net.Probe] = []
+    var probedGateway: String?
     /// Lets the app tick right away after a menu change instead of up to 10 seconds later.
     let wakeUp = DispatchSemaphore(value: 0)
 
@@ -48,24 +51,34 @@ public final class Agent {
         let config = Store.loadConfig()
         let gateway = Net.router()
         // Pinging the gateway is the keepalive: it stops a phone from shutting an idle hotspot down.
-        // It also refreshes the ARP entry that `mac(of:)` reads.
-        if let gateway { _ = Net.ping(gateway) }
+        // It also refreshes the ARP entry that `mac(of:)` reads, and measures latency and loss.
+        if gateway != probedGateway {
+            probes = []
+            probedGateway = gateway
+        }
+        if let gateway { probes = (probes + [Net.probe(gateway)]).suffix(6) }
         let mac = gateway.flatMap(Net.mac(of:))
         let onHotspot = gateway == Net.iPhoneGateway || mac.map(config.hotspotMACs.contains) == true
 
-        handleAWDL(onHotspot: onHotspot && !config.paused && config.awdlOff && !config.awdlAllowed)
+        handleAWDL(down: config.turnsOffAWDL(onHotspot: onHotspot) && !config.paused && !config.awdlAllowed)
         let onPin = config.paused ? nil : handlePin(config.pin, currentMAC: mac)
 
+        let sent = probes.reduce(0) { $0 + $1.sent }
+        let received = probes.reduce(0) { $0 + $1.received }
+        let roundTrips = probes.reduce(0.0) { $0 + ($1.averageMs ?? 0) * Double($1.received) }
         Store.saveStatus(Status(
             updated: Date(), gateway: gateway, gatewayMAC: mac, onHotspot: onHotspot,
-            awdlDown: !Net.awdlIsUp(), onPin: onPin, lastEvent: lastEvent))
+            awdlDown: !Net.awdlIsUp(), onPin: onPin, lastEvent: lastEvent,
+            latencyMs: received > 0 ? roundTrips / Double(received) : nil,
+            packetLoss: sent > 0 ? 1 - Double(received) / Double(sent) : nil,
+            gatewaySilent: probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 }))
     }
 
-    func handleAWDL(onHotspot: Bool) {
+    func handleAWDL(down: Bool) {
         awdlLock.lock()
         defer { awdlLock.unlock() }
-        keepAWDLDown = onHotspot
-        if onHotspot {
+        keepAWDLDown = down
+        if down {
             // macOS brings awdl0 back whenever something asks for it. The watcher takes it down at
             // once; this catches anything it missed.
             // Already down counts as ours too (e.g. left down by a previous run), so leaving the

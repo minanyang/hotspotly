@@ -19,8 +19,8 @@ $(BUILD)/libHotspotlyCore.a: $(CORE)
 $(BUILD)/hotspotly: Sources/hotspotly/main.swift $(BUILD)/libHotspotlyCore.a
 	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $<
 
-$(BUILD)/HotspotlyBar: Sources/HotspotlyBar/main.swift $(BUILD)/libHotspotlyCore.a
-	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $<
+$(BUILD)/HotspotlyBar: $(wildcard Sources/HotspotlyBar/*.swift) $(BUILD)/libHotspotlyCore.a
+	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $(wildcard Sources/HotspotlyBar/*.swift)
 
 # The CLI ships inside the app. Ad-hoc signed, CLI first since codesign wants nested code signed.
 $(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly Resources/Info.plist $(wildcard Resources/*.lproj/*) \
