@@ -227,6 +227,8 @@ public final class Agent {
 
     func handlePin(_ pin: Config.Pin?, currentMAC: String?) -> Bool? {
         if pin != trackedPin {
+            // Events about the old pin (all name it in quotes) no longer describe anything.
+            if let old = trackedPin, lastEvent?.contains("'\(old.ssid)'") == true { lastEvent = nil }
             trackedPin = pin
             wasOnPin = true
         }
