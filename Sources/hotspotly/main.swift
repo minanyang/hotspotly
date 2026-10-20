@@ -121,9 +121,11 @@ case "mark-hotspot":
     print("marked gateway \(mac) as a hotspot")
 case "unmark-hotspot":
     let mac = currentGatewayMAC()
+    // Marks made in Settings are by name, which the CLI cannot see; the history links the two.
+    let names = Store.loadHistory().filter { $0.value.gatewayMAC == mac }.keys
     Store.updateConfig {
         $0.hotspotMACs.removeAll { $0 == mac }
-        $0.hotspotNames[mac] = nil
+        $0.hotspotSSIDs.removeAll(where: names.contains)
     }
 case "pause":
     Store.updateConfig { $0.paused = true }

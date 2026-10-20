@@ -10,7 +10,6 @@ import SwiftUI
 final class SettingsModel: ObservableObject {
     @Published private(set) var config = Store.loadConfig()
     @Published private(set) var status: Status?
-    @Published private(set) var ssid: String?
     @Published private(set) var openAtLogin = false
     @Published private(set) var cliLinked = false
     @Published private(set) var helperStatus = SMAppService.Status.notRegistered
@@ -52,7 +51,6 @@ final class SettingsModel: ObservableObject {
     func reload() {
         config = Store.loadConfig()
         status = Store.loadStatus()
-        ssid = CWWiFiClient.shared().interface()?.ssid()
         openAtLogin = SMAppService.mainApp.status == .enabled
         cliLinked = Setup.cliIsLinked(to: cliPath)
         helperStatus = Helper.service.status
@@ -146,26 +144,26 @@ final class SettingsModel: ObservableObject {
         }
     }
 
-    func mark(_ mac: String) {
-        let name = ssid
-        update {
-            if !$0.hotspotMACs.contains(mac) { $0.hotspotMACs.append(mac) }
-            $0.hotspotNames[mac] = name
+    func isMarked(_ row: NetworkRow) -> Bool {
+        config.hotspotSSIDs.contains(row.name) || row.record?.gatewayMAC.map(config.hotspotMACs.contains) == true
+    }
+
+    func mark(_ ssids: Set<String>) {
+        let rows = networks.filter { ssids.contains($0.name) }
+        update { config in
+            for row in rows {
+                if !config.hotspotSSIDs.contains(row.name) { config.hotspotSSIDs.append(row.name) }
+                if let mac = row.record?.gatewayMAC, !config.hotspotMACs.contains(mac) { config.hotspotMACs.append(mac) }
+            }
         }
     }
 
-    func unmark(_ mac: String) {
-        update {
-            $0.hotspotMACs.removeAll { $0 == mac }
-            $0.hotspotNames[mac] = nil
+    func unmark(_ ssids: Set<String>) {
+        let macs = networks.filter { ssids.contains($0.name) }.compactMap { $0.record?.gatewayMAC }
+        update { config in
+            config.hotspotSSIDs.removeAll(where: ssids.contains)
+            config.hotspotMACs.removeAll(where: macs.contains)
         }
-    }
-
-    /// The current network, if it is not an iPhone hotspot (detected anyway) and not marked yet.
-    var unmarkedCurrentMAC: String? {
-        guard let mac = status?.gatewayMAC, status?.gateway != Net.iPhoneGateway,
-              !config.hotspotMACs.contains(mac) else { return nil }
-        return mac
     }
 }
 
@@ -174,6 +172,15 @@ struct GeneralTab: View {
 
     var body: some View {
         Form {
+            Section {
+                Picker(L("Turn Off AWDL"), selection: Binding(get: { model.config.awdlMode }, set: model.setAWDLMode)) {
+                    Text(L("On Mobile Hotspots")).tag(Config.AWDLMode.hotspots)
+                    Text(L("On All Networks")).tag(Config.AWDLMode.all)
+                    Text(L("Never")).tag(Config.AWDLMode.never)
+                }
+                Text(L("AWDL is behind AirDrop, Universal Control and Sidecar, and makes phone hotspots drop. Turned off, those stop working until you allow AirDrop from the menu."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
             Section {
                 // Named as in System Settings, where the user allows it.
                 LabeledContent(L("Allow in the Background")) {
@@ -222,7 +229,7 @@ struct GeneralTab: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 480, height: 500)
+        .frame(width: 560, height: 620)
     }
 
     var locationText: String {
@@ -239,48 +246,6 @@ struct GeneralTab: View {
         case .requiresApproval: L("Waiting for your approval")
         default: L("Not set up")
         }
-    }
-}
-
-struct HotspotsTab: View {
-    @ObservedObject var model: SettingsModel
-
-    var body: some View {
-        Form {
-            Section {
-                Picker(L("Turn Off AWDL"), selection: Binding(get: { model.config.awdlMode }, set: model.setAWDLMode)) {
-                    Text(L("On Hotspots")).tag(Config.AWDLMode.hotspots)
-                    Text(L("On All Networks")).tag(Config.AWDLMode.all)
-                    Text(L("Never")).tag(Config.AWDLMode.never)
-                }
-                Text(L("AWDL is behind AirDrop, Universal Control and Sidecar, and makes phone hotspots drop. Turned off, those stop working until you allow AirDrop from the menu."))
-                    .font(.callout).foregroundStyle(.secondary)
-                if model.config.awdlMode != .never && !model.helperEnabled {
-                    LabeledContent(L("Needs Hotspotly’s helper")) {
-                        Button(L("Allow…"), action: model.allowHelper)
-                    }
-                }
-            }
-            Section(L("Hotspots")) {
-                Text(L("iPhone hotspots are detected automatically. Mark others here, such as Android phones and pocket routers."))
-                    .font(.callout).foregroundStyle(.secondary)
-                if let mac = model.unmarkedCurrentMAC {
-                    LabeledContent(model.ssid ?? L("Current network")) {
-                        Button(L("Mark as Hotspot")) { model.mark(mac) }
-                    }
-                }
-                ForEach(model.config.hotspotMACs, id: \.self) { mac in
-                    LabeledContent {
-                        Button(L("Remove")) { model.unmark(mac) }
-                    } label: {
-                        Text(model.config.hotspotNames[mac] ?? mac)
-                        if model.config.hotspotNames[mac] != nil { Text(mac) }
-                    }
-                }
-            }
-        }
-        .formStyle(.grouped)
-        .frame(width: 480, height: 320)
     }
 }
 
@@ -336,12 +301,22 @@ struct NetworksTab: View {
             .sorted(using: sortOrder)
     }
 
+    var selected: [NetworkRow] { model.networks.filter { selection.contains($0.id) } }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             TextField(L("Filter"), text: $filter).textFieldStyle(.roundedBorder)
             Table(rows, selection: $selection, sortOrder: $sortOrder) {
                 TableColumn(L("Name"), value: \.name)
                     .width(min: 120, max: 200)
+                TableColumn(L("Type")) { row in
+                    if row.record?.iPhoneHotspot == true {
+                        Text(L("iPhone Hotspot"))
+                    } else if model.isMarked(row) {
+                        Text(L("Mobile Hotspot"))
+                    }
+                }
+                .width(110)
                 TableColumn(L("Security"), value: \.security) { row in
                     Text(row.security).foregroundStyle(row.insecure ? .orange : .primary)
                 }
@@ -358,21 +333,23 @@ struct NetworksTab: View {
                     .width(min: 280)
             }
             HStack {
-                Text(L("\(model.networks.count) networks. Last connected and quality are recorded by Hotspotly from when it was installed."))
+                Text(L("\(model.networks.count) networks. Last connected and quality are recorded by Hotspotly from when it was installed. iPhone hotspots are detected; mark Android phones and pocket routers as mobile hotspots."))
                     .font(.callout).foregroundStyle(.secondary)
                 Spacer()
+                Button(L("Mark as Mobile Hotspot")) { model.mark(selection) }.disabled(!selected.contains { !model.isMarked($0) && $0.record?.iPhoneHotspot != true })
+                Button(L("Unmark")) { model.unmark(selection) }.disabled(!selected.contains(where: model.isMarked))
                 Button(L("Forget…")) { confirming = true }.disabled(selection.isEmpty)
             }
         }
         .padding()
-        .frame(width: 760, height: 440)
+        .frame(width: 860, height: 440)
         .confirmationDialog(L("Forget \(selection.count) networks?"), isPresented: $confirming) {
             Button(L("Forget"), role: .destructive) {
                 model.forget(selection)
                 selection = []
             }
         } message: {
-            Text(L("The Mac stops joining them automatically. This needs an administrator password."))
+            Text(L("The Mac stops joining them automatically."))
         }
     }
 }
@@ -408,7 +385,7 @@ struct AboutTab: View {
             .padding(.horizontal, 24)
         }
         .padding(.vertical)
-        .frame(width: 480, height: 380)
+        .frame(width: 560, height: 380)
     }
 }
 
@@ -430,7 +407,6 @@ final class SettingsWindow {
             tabs.tabStyle = .toolbar
             for (title, symbol, view) in [
                 (L("General"), "gearshape", AnyView(GeneralTab(model: model))),
-                (L("Hotspots"), "personalhotspot", AnyView(HotspotsTab(model: model))),
                 (L("Networks"), "wifi", AnyView(NetworksTab(model: model))),
                 (L("Insights"), "chart.bar", AnyView(InsightsTab(model: model))),
                 (L("About"), "info.circle", AnyView(AboutTab(model: model))),

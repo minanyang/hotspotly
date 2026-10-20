@@ -408,7 +408,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         if let pin = config.pin, let onPin = status.onPin {
             parts.append(onPin ? L("Pinned") : L("Away from \(pin.ssid)"))
         }
-        return parts.isEmpty ? L("Not on a hotspot") : parts.joined(separator: " · ")
+        return parts.isEmpty ? L("Not on a mobile hotspot") : parts.joined(separator: " · ")
     }
 
     /// Live readings for the current Wi-Fi link, read when the menu opens, and the data used on a hotspot.

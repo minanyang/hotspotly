@@ -18,10 +18,12 @@ public struct Config: Codable, Equatable {
     }
 
     public var pin: Pin?
-    /// Gateway MACs of networks the user marked as hotspots.
+    /// Networks the user marked as mobile hotspots, by name: an Android hotspot may change its
+    /// MAC, and the Networks tab lists networks by name.
+    public var hotspotSSIDs: [String] = []
+    /// Their gateway MACs where known, so a mark still works without location access, which the
+    /// network name needs. `hotspotly mark-hotspot` adds only these.
     public var hotspotMACs: [String] = []
-    /// Network names for `hotspotMACs`, when known; only the menu bar app can read them.
-    public var hotspotNames: [String: String] = [:]
     public var paused = false
     /// Where to turn AWDL off. Some prefer to keep Universal Control and friends.
     public var awdlMode = AWDLMode.hotspots
@@ -32,6 +34,12 @@ public struct Config: Codable, Equatable {
 
     public var awdlAllowed: Bool { awdlAllowedUntil.map { $0 > Date() } == true }
 
+    /// iPhone hotspots always use 172.20.10.1; others count once marked.
+    public func isHotspot(gateway: String?, mac: String?, ssid: String?) -> Bool {
+        gateway == Net.iPhoneGateway || mac.map(hotspotMACs.contains) == true
+            || ssid.map(hotspotSSIDs.contains) == true
+    }
+
     /// Whether the current network is one where AWDL should be off, before pause and allowance.
     public func turnsOffAWDL(onHotspot: Bool) -> Bool {
         awdlMode == .all || (awdlMode == .hotspots && onHotspot)
@@ -39,13 +47,18 @@ public struct Config: Codable, Equatable {
 
     public init() {}
 
+    /// Versions before 0.6.0 kept the names of marked networks keyed by gateway MAC.
+    enum LegacyKeys: String, CodingKey { case hotspotNames }
+
     /// Missing keys keep their defaults, so a config written by an older version still loads;
     /// a failed decode would fall back to `Config()` and lose the pin.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         pin = try c.decodeIfPresent(Pin.self, forKey: .pin)
         hotspotMACs = try c.decodeIfPresent([String].self, forKey: .hotspotMACs) ?? hotspotMACs
-        hotspotNames = try c.decodeIfPresent([String: String].self, forKey: .hotspotNames) ?? hotspotNames
+        let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+        let names = try legacy.decodeIfPresent([String: String].self, forKey: .hotspotNames) ?? [:]
+        hotspotSSIDs = try c.decodeIfPresent([String].self, forKey: .hotspotSSIDs) ?? Set(names.values).sorted()
         paused = try c.decodeIfPresent(Bool.self, forKey: .paused) ?? paused
         awdlMode = try c.decodeIfPresent(AWDLMode.self, forKey: .awdlMode) ?? awdlMode
         awdlAllowedUntil = try c.decodeIfPresent(Date.self, forKey: .awdlAllowedUntil)
@@ -93,6 +106,9 @@ public struct NetworkRecord: Codable {
     public var rssiCount = 0
     /// Times the router stopped answering keepalive pings.
     public var dropouts = 0
+    /// From the last time the Mac was on it, so the Networks tab can mark and show it.
+    public var gatewayMAC: String?
+    public var iPhoneHotspot: Bool?
 
     public var latencyMs: Double? { received > 0 ? roundTripMs / Double(received) : nil }
     public var packetLoss: Double? { sent > 0 ? 1 - Double(received) / Double(sent) : nil }

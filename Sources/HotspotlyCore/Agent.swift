@@ -87,13 +87,15 @@ public final class Agent {
         if let probe { probes = (probes + [probe]).suffix(6) }
         if let probe, probe.received > 0 { gatewayAnswered = true }
         let mac = gateway.flatMap(Net.mac(of:))
-        let onHotspot = gateway == Net.iPhoneGateway || mac.map(config.hotspotMACs.contains) == true
+        let ssid = Net.ssid()
+        let onHotspot = config.isHotspot(gateway: gateway, mac: mac, ssid: ssid)
         // Still reachable (its MAC resolves) but never answered: pings tell nothing about this network.
         let ignoresPings = probes.count >= 2 && !gatewayAnswered && mac != nil
         let silent = !ignoresPings && probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 }
         let measured = ignoresPings ? nil : probe
-        let ssid = Net.ssid()
-        if gateway != nil, let ssid { record(measured, on: ssid, silent: silent) }
+        if let gateway, let ssid {
+            record(measured, on: ssid, mac: mac, iPhoneHotspot: gateway == Net.iPhoneGateway, silent: silent)
+        }
         wasSilent = silent
         // Before handleAWDL: the state the round was measured in.
         trackInsights(network: gateway == nil ? nil : ssid ?? mac, hotspot: onHotspot, probe: measured,
@@ -117,11 +119,13 @@ public final class Agent {
     }
 
     /// `probe` is nil when the router ignores pings, so its rounds do not count as loss.
-    func record(_ probe: Net.Probe?, on ssid: String, silent: Bool) {
+    func record(_ probe: Net.Probe?, on ssid: String, mac: String?, iPhoneHotspot: Bool, silent: Bool) {
         let rssi = Net.rssi()
         Store.updateHistory { history in
             var entry = history[ssid] ?? NetworkRecord(lastConnected: Date())
             entry.lastConnected = Date()
+            entry.gatewayMAC = mac ?? entry.gatewayMAC
+            entry.iPhoneHotspot = iPhoneHotspot
             if let probe {
                 entry.sent += probe.sent
                 entry.received += probe.received

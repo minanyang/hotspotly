@@ -49,7 +49,7 @@ struct InsightsTab: View {
     var body: some View {
         Form {
             Picker(L("Show"), selection: $scope) {
-                Text(L("Hotspots")).tag(Scope.hotspots)
+                Text(L("Mobile Hotspots")).tag(Scope.hotspots)
                 Text(L("Wi-Fi")).tag(Scope.wifi)
                 Divider()
                 ForEach(model.insights.networks.keys.sorted(), id: \.self) { Text($0).tag(Scope.network($0)) }

@@ -79,18 +79,10 @@ icon's router:
 **Allow AirDrop for 10 Minutes** appears while you are on a hotspot. The icon's router is filled
 while you are on one. **Settings…** (⌘,) opens the window described below.
 
-### Hotspots
+### Where AWDL goes off
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/hotspots-dark.png">
-    <img src="docs/screenshots/hotspots-light.png" width="520" alt="Settings, Hotspots tab: where to turn off AWDL, and a hotspot marked by hand">
-  </picture>
-</p>
-
-**Turn Off AWDL** chooses where Hotspotly turns AWDL off: on hotspots (the default), on all
-networks, or never. iPhone hotspots are detected automatically; connect to an Android phone or a
-pocket router and click **Mark as Hotspot** to treat it as one.
+**Turn Off AWDL** under **Settings… → General** chooses where Hotspotly turns AWDL off: on mobile
+hotspots (the default), on all networks, or never.
 
 ### Pinning a network
 
@@ -110,8 +102,9 @@ iPhone hotspot that has stopped advertising; the built-in Wi-Fi menu can.
 </p>
 
 **Settings… → Networks** lists every network the Mac remembers, with its security (open and WEP
-networks in orange), when the Mac was last on it and how well it worked. Select several and click
-**Forget…** to remove them. macOS keeps its own join dates where only
+networks in orange), when the Mac was last on it and how well it worked. iPhone hotspots are
+detected automatically; select an Android phone or a pocket router and click **Mark as Mobile
+Hotspot** to treat it as one. Select several and click **Forget…** to remove them. macOS keeps its own join dates where only
 root with Full Disk Access can read them, so Hotspotly records its own, starting when you install it.
 
 ### Insights
@@ -143,7 +136,7 @@ router copes; a phone hotspot often shows latency spikes or drops the connection
 
 Turning AWDL off fixes this but stops those features, so by default Hotspotly turns it off only on a hotspot,
 and again within milliseconds whenever macOS brings it back. **Allow AirDrop for 10 Minutes** keeps it on
-for a while; **Turn Off AWDL** under **Settings… → Hotspots** chooses where it goes off: on
+for a while; **Turn Off AWDL** under **Settings… → General** chooses where it goes off: on
 hotspots (the default), on all networks, or never. `ifconfig awdl0` shows `<UP,…>` when
 it is on.
 
@@ -184,7 +177,7 @@ The commands change the running app's settings; they need the app to be running,
   **System Settings → General → Login Items & Extensions → Allow in the Background**;
   **Settings… → General** shows whether it is allowed. Without it, keepalive and pinning still
   work, and **Allow Hotspotly’s Helper…** stays in the menu until you allow it or set **Turn Off
-  AWDL** to **Never** under **Settings… → Hotspots**. Versions before 0.6.0 used a sudoers rule
+  AWDL** to **Never** under **Settings… → General**. Versions before 0.6.0 used a sudoers rule
   instead; the helper removes it.
 - **Location (optional).** macOS hides Wi-Fi network names from apps without location access.
   With it, the menu shows the current network's name. Without it, everything still works:

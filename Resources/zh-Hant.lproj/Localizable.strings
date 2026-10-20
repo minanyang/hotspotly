@@ -15,7 +15,7 @@
 "Other Remembered Networks" = "其他記住的網路";
 "Unpin" = "取消釘選";
 "Turn Off AWDL" = "關閉 AWDL";
-"On Hotspots" = "在熱點上";
+"On Mobile Hotspots" = "在手機熱點上";
 "On All Networks" = "在所有網路上";
 "Never" = "永不";
 "Open at Login" = "登入時開啟";
@@ -48,7 +48,7 @@
 "%lld%% loss" = "掉包 %lld%%";
 "AWDL left on" = "AWDL 保持開啟";
 "AirDrop allowed · %lld min" = "允許 AirDrop · 剩 %lld 分鐘";
-"Not on a hotspot" = "不在熱點上";
+"Not on a mobile hotspot" = "不在手機熱點上";
 "Wi-Fi" = "Wi-Fi";
 "Signal" = "訊號";
 "Channel" = "頻道";
@@ -56,7 +56,7 @@
 "Settings…" = "設定…";
 "Close" = "關閉";
 "General" = "一般";
-"Hotspots" = "熱點";
+"Mobile Hotspots" = "手機熱點";
 "About" = "關於";
 "Command line tool" = "命令列工具";
 "Not installed" = "尚未安裝";
@@ -64,10 +64,11 @@
 "Uninstall…" = "移除…";
 "Log" = "記錄檔";
 "AWDL is behind AirDrop, Universal Control and Sidecar, and makes phone hotspots drop. Turned off, those stop working until you allow AirDrop from the menu." = "AirDrop、通用控制和隨航都靠 AWDL，但它會讓手機熱點斷線。關掉後這些功能會停用，需要時可從選單暫時允許 AirDrop。";
-"iPhone hotspots are detected automatically. Mark others here, such as Android phones and pocket routers." = "iPhone 熱點會自動偵測。其他熱點，例如 Android 手機和行動網卡，請在這裡標記。";
-"Current network" = "目前的網路";
-"Mark as Hotspot" = "標記為熱點";
-"Remove" = "移除";
+"Mark as Mobile Hotspot" = "標記為手機熱點";
+"Unmark" = "取消標記";
+"Type" = "類型";
+"iPhone Hotspot" = "iPhone 熱點";
+"Mobile Hotspot" = "手機熱點";
 "Version %@" = "版本 %@";
 "Keeps your Mac steady on phone hotspots and Wi-Fi." = "讓 Mac 穩穩連在手機熱點和 Wi-Fi 上。";
 "MIT License" = "MIT 授權";
@@ -87,11 +88,11 @@
 "Enterprise" = "企業";
 "%lld no-reply spells" = "路由器無回應 %lld 次";
 "1 no-reply spell" = "路由器無回應 1 次";
-"%lld networks. Last connected and quality are recorded by Hotspotly from when it was installed." = "共 %lld 個網路。上次連線和連線品質由 Hotspotly 從安裝後開始記錄。";
+"%lld networks. Last connected and quality are recorded by Hotspotly from when it was installed. iPhone hotspots are detected; mark Android phones and pocket routers as mobile hotspots." = "共 %lld 個網路。上次連線和連線品質由 Hotspotly 從安裝後開始記錄。iPhone 熱點會自動偵測；Android 手機和行動網卡請標記為手機熱點。";
 "Forget…" = "忘記…";
 "Forget %lld networks?" = "要忘記 %lld 個網路嗎？";
 "Forget" = "忘記";
-"The Mac stops joining them automatically. This needs an administrator password." = "Mac 不會再自動連上這些網路。這需要管理者密碼。";
+"The Mac stops joining them automatically." = "Mac 不會再自動連上這些網路。";
 "Could not forget the networks" = "無法忘記這些網路";
 "Use Password Saved on This Mac…" = "使用這台 Mac 儲存的密碼…";
 "Hide Menu Bar Icon" = "隱藏選單列圖示";
@@ -136,7 +137,6 @@
 "Allowed" = "已允許";
 "Waiting for your approval" = "等待你的核准";
 "Not set up" = "尚未設定";
-"Needs Hotspotly’s helper" = "需要 Hotspotly 的輔助程式";
 "This removes the helper, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash." = "這會移除輔助程式、命令列工具和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。";
 "Open Login Items…" = "打開登入項目…";
 "Location" = "定位";
