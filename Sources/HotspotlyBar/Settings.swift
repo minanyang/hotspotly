@@ -342,7 +342,7 @@ struct NetworksTab: View {
             }
         }
         .padding()
-        .frame(width: 860, height: 440)
+        .frame(width: 900, height: 440)
         .confirmationDialog(L("Forget \(selection.count) networks?"), isPresented: $confirming) {
             Button(L("Forget"), role: .destructive) {
                 model.forget(selection)
