@@ -41,8 +41,8 @@ Requires macOS 13 (Ventura) or later.
 1. Download [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip),
    unzip it, drag **Hotspotly** to Applications and open it. It is signed with a Developer ID and
    notarized by Apple.
-2. Click **Continue** when it asks to finish setup, and enter your password (see
-   [Permissions](#permissions)).
+2. When it asks, click **Open System Settings** and turn on **Hotspotly** under **Login Items &
+   Extensions → Allow in the Background**. That allows its helper (see [Permissions](#permissions)).
 3. Allow Location when asked, so the menu can show network names.
 4. Turn on **Open at Login** under **Settings… → General** in its menu.
 
@@ -111,8 +111,16 @@ iPhone hotspot that has stopped advertising; the built-in Wi-Fi menu can.
 
 **Settings… → Networks** lists every network the Mac remembers, with its security (open and WEP
 networks in orange), when the Mac was last on it and how well it worked. Select several and click
-**Forget…** to remove them with one administrator prompt. macOS keeps its own join dates where only
+**Forget…** to remove them. macOS keeps its own join dates where only
 root with Full Disk Access can read them, so Hotspotly records its own, starting when you install it.
+
+### Insights
+
+**Settings… → Insights** shows whether Hotspotly helps on your networks. It compares latency,
+packet loss and drops with AWDL off and on (on while AirDrop is allowed, or where Hotspotly leaves
+it alone), lists recent drops with their cause from the system log (the phone or router ended it,
+the signal was lost, macOS switched networks, the Mac slept), and counts what Hotspotly did. The
+measurements stay on your Mac.
 
 ### Updates
 
@@ -168,11 +176,16 @@ The commands change the running app's settings; they need the app to be running,
 
 ## Permissions
 
-- **Administrator password, once, at setup.** Turning AWDL off needs root. Instead of running
-  anything as root, setup adds `/etc/sudoers.d/hotspotly`, which lets your user run exactly two
-  commands without a password: `/sbin/ifconfig awdl0 down` and `/sbin/ifconfig awdl0 up`. If you
-  skip it, keepalive and pinning still work; **Finish Setup…** stays in the menu until you do it
-  or set **Turn Off AWDL** to **Never** under **Settings… → Hotspots**.
+- **A helper with administrator rights, allowed once.** Turning AWDL off needs root, so Hotspotly
+  ships a small helper that macOS starts when the app needs it and stops when the app quits. It
+  does three things and nothing else: turns AWDL off and on, forgets the networks you pick in the
+  Networks tab, and links the command line tool into `/usr/local/bin`. macOS checks that every
+  caller is Hotspotly.app signed by its developer, so no other program can use it. Allow it under
+  **System Settings → General → Login Items & Extensions → Allow in the Background**;
+  **Settings… → General** shows whether it is allowed. Without it, keepalive and pinning still
+  work, and **Allow Hotspotly’s Helper…** stays in the menu until you allow it or set **Turn Off
+  AWDL** to **Never** under **Settings… → Hotspots**. Versions before 0.6.0 used a sudoers rule
+  instead; the helper removes it.
 - **Location (optional).** macOS hides Wi-Fi network names from apps without location access.
   With it, the menu shows the current network's name. Without it, everything still works:
   Hotspotly tells networks apart by their gateway's MAC address, which macOS does not hide.
@@ -185,7 +198,7 @@ The commands change the running app's settings; they need the app to be running,
 
 ## Uninstall
 
-Choose **Uninstall Hotspotly…** under **Settings… → General**. It removes the sudoers rule, the command line link
+Choose **Uninstall Hotspotly…** under **Settings… → General**. It removes the helper, the command line link
 and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash.
 
 Settings live in `~/Library/Application Support/hotspotly`.

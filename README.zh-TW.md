@@ -34,7 +34,7 @@ iPhone 熱點會自動辨識；Android 手機和行動網卡可以手動標記�
 需要 macOS 13（Ventura）或更新版本。
 
 1. 下載 [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip)，解壓縮後把 **Hotspotly** 拖進「應用程式」並打開。它有 Developer ID 簽章，也經過 Apple 公證。
-2. 出現「完成 Hotspotly 的設定」的詢問時按「**繼續**」，輸入你的密碼（原因見[權限](#權限)）。
+2. 出現詢問時按「**打開系統設定**」，在「**登入項目與延伸功能 → 允許在背景執行**」打開 **Hotspotly**，允許它的輔助程式（原因見[權限](#權限)）。
 3. 詢問位置權限時按「允許」，選單才能顯示網路名稱。
 4. 在選單的「**設定… → 一般**」打開「**登入時開啟**」。
 
@@ -90,7 +90,11 @@ open /Applications/Hotspotly.app
   </picture>
 </p>
 
-「**設定… → 網路**」會列出 Mac 記住的所有網路，包括安全性（開放和 WEP 網路以橘色標示）、上次連線時間和連線品質。可以選取多個網路，按「**忘記…**」，只要輸入一次管理者密碼就能一起移除。macOS 自己記錄的連線日期只有 root 加上「完整磁碟取用權限」才讀得到，所以 Hotspotly 從安裝後開始自己記錄。
+「**設定… → 網路**」會列出 Mac 記住的所有網路，包括安全性（開放和 WEP 網路以橘色標示）、上次連線時間和連線品質。可以選取多個網路，按「**忘記…**」就能一起移除。macOS 自己記錄的連線日期只有 root 加上「完整磁碟取用權限」才讀得到，所以 Hotspotly 從安裝後開始自己記錄。
+
+### 成效分析
+
+「**設定… → 成效分析**」會告訴你 Hotspotly 在你的網路上有沒有幫助。它比較 AWDL 關閉和開啟時（允許 AirDrop 期間，或 Hotspotly 不處理的網路上）的延遲、掉包和斷線，列出最近的斷線和系統 log 裡記錄的原因（手機或路由器中斷了連線、訊號消失、macOS 換到其他網路、Mac 進入睡眠），並統計 Hotspotly 做了什麼。量測資料只會留在你的 Mac 上。
 
 ### 更新
 
@@ -134,14 +138,14 @@ hotspotly run                    不開 app，在前景執行背景迴圈（開�
 
 ## 權限
 
-- **設定時輸入一次管理員密碼。** 關掉 AWDL 需要 root 權限。Hotspotly 不會用 root 執行任何程式，而是在設定時加入 `/etc/sudoers.d/hotspotly`，讓你的帳號可以不用密碼執行兩個指令，而且只有這兩個：`/sbin/ifconfig awdl0 down` 和 `/sbin/ifconfig awdl0 up`。如果跳過這一步，keepalive 和釘選網路照常能用，選單會一直顯示「**完成設定…**」，直到你完成設定，或在「**設定… → 熱點**」把「**關閉 AWDL**」設成「**永不**」。
+- **具管理者權限的輔助程式，只需允許一次。** 關掉 AWDL 需要 root 權限，所以 Hotspotly 附了一個小型輔助程式：app 需要時由 macOS 啟動，app 結束時跟著結束。它只做三件事：開關 AWDL、忘記你在「網路」分頁選的網路，以及把命令列工具連結到 `/usr/local/bin`。macOS 會檢查每個呼叫者都是開發者簽章的 Hotspotly.app，其他程式都無法使用它。請到「**系統設定 → 一般 → 登入項目與延伸功能 → 允許在背景執行**」允許它；「**設定… → 一般**」會顯示是否已允許。沒有它，keepalive 和釘選網路照常能用，選單會一直顯示「**允許 Hotspotly 的輔助程式…**」，直到你允許它，或在「**設定… → 熱點**」把「**關閉 AWDL**」設成「**永不**」。0.6.0 以前的版本改用 sudoers 規則，輔助程式會把它移除。
 - **位置（選用）。** macOS 不讓沒有位置權限的 app 讀取 Wi-Fi 名稱。允許後，選單會顯示目前的網路名稱；不允許也不影響功能，因為 Hotspotly 是用閘道的 MAC 位址來辨認網路，macOS 不會隱藏這個資訊。它不會讀取你的位置。
 - **登入鑰匙圈。** 你透過 Hotspotly 釘選的網路密碼，存在 `io.github.minanyang.hotspotly` 底下。
 - **網路。** 除了 ping 你的路由器，Hotspotly 每天會從 `raw.githubusercontent.com` 讀取一次 `appcast.xml` 來檢查更新，所以 GitHub 會看到來自你 IP 位址的請求。除此之外不會傳送任何資料。
 
 ## 移除
 
-在「**設定… → 一般**」按「**解除安裝 Hotspotly…**」，它會移除 sudoers 規則、命令列工具的連結和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。
+在「**設定… → 一般**」按「**解除安裝 Hotspotly…**」，它會移除輔助程式、命令列工具的連結和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。
 
 設定檔在 `~/Library/Application Support/hotspotly`。
 
