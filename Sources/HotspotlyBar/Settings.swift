@@ -80,7 +80,11 @@ final class SettingsModel: ObservableObject {
     /// macOS asks only once; after that, location access can only be turned on in System Settings.
     func allowLocation() {
         if locationStatus == .notDetermined { return requestLocation() }
-        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices")!)
+        let pane = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices")!
+        NSWorkspace.shared.open(pane)
+        // With System Settings already open on another pane, the first open often only brings it
+        // forward; a second one a moment later switches the pane.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { NSWorkspace.shared.open(pane) }
     }
 
     /// Runs a helper call off the main thread; nil means the helper is not allowed yet.
