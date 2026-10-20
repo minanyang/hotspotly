@@ -38,6 +38,10 @@ $(BUILD)/HotspotlyBar: $(wildcard Sources/HotspotlyBar/*.swift) $(BUILD)/libHots
 	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -F $(SPARKLE) -framework Sparkle \
 		-Xlinker -rpath -Xlinker @executable_path/../Frameworks -o $@ $(wildcard Sources/HotspotlyBar/*.swift)
 
+# The privileged helper that Hotspotly.app registers with launchd (SMAppService).
+$(BUILD)/hotspotly-helper: Sources/HotspotlyHelper/main.swift $(BUILD)/libHotspotlyCore.a
+	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $<
+
 $(SPARKLE):
 	mkdir -p $@
 	curl -fsSL -o $@.tar.xz https://github.com/sparkle-project/Sparkle/releases/download/$(SPARKLE_VERSION)/Sparkle-$(SPARKLE_VERSION).tar.xz
@@ -47,11 +51,14 @@ $(SPARKLE):
 
 # The CLI and Sparkle ship inside the app; they are signed first since codesign wants nested code
 # signed, and with the same identity, since the hardened runtime only loads code from its own team.
-$(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly Resources/Info.plist $(wildcard Resources/*.lproj/*) \
-		Resources/AppIcon.icns $(wildcard Resources/*.pdf) Resources/Hotspotly.entitlements
+$(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $(BUILD)/hotspotly-helper Resources/Info.plist $(wildcard Resources/*.lproj/*) \
+		Resources/AppIcon.icns $(wildcard Resources/*.pdf) Resources/Hotspotly.entitlements \
+		Resources/io.github.minanyang.hotspotly.helper.plist
 	rm -r -f $@
 	mkdir -p $@/Contents/MacOS $@/Contents/Resources
-	cp $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $@/Contents/MacOS/
+	mkdir -p $@/Contents/Library/LaunchDaemons
+	cp $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $(BUILD)/hotspotly-helper $@/Contents/MacOS/
+	cp Resources/io.github.minanyang.hotspotly.helper.plist $@/Contents/Library/LaunchDaemons/
 	cp -R Resources/*.lproj Resources/AppIcon.icns Resources/*.pdf $@/Contents/Resources/
 	cp $(SPARKLE)/LICENSE $@/Contents/Resources/Sparkle-LICENSE
 	sed 's/__VERSION__/$(VERSION)/' Resources/Info.plist > $@/Contents/Info.plist
@@ -62,6 +69,7 @@ $(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly Resources/Info.plist $(wildcard
 	$(SIGN) $@/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app
 	$(SIGN) $@/Contents/Frameworks/Sparkle.framework
 	$(SIGN) $@/Contents/MacOS/hotspotly
+	$(SIGN) --identifier io.github.minanyang.hotspotly.helper $@/Contents/MacOS/hotspotly-helper
 	$(SIGN) --entitlements Resources/Hotspotly.entitlements $@
 
 app: $(APP)

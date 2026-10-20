@@ -1,5 +1,4 @@
 /* Menu */
-"Finish Setup…" = "完成設定…";
 "Starting…" = "啟動中…";
 "Not connected" = "沒有連線";
 "Network name hidden" = "網路名稱已隱藏";
@@ -25,16 +24,11 @@
 "Quit Hotspotly" = "結束 Hotspotly";
 
 /* Setup */
-"Finish setting up Hotspotly" = "完成 Hotspotly 的設定";
-"Turning off AWDL on a hotspot needs administrator rights. Hotspotly adds a rule that lets it run only `ifconfig awdl0 up` and `ifconfig awdl0 down`, and nothing else. Keepalive and pinning work without it." = "在熱點上關閉 AWDL 需要管理員權限。Hotspotly 會加入一條規則，只允許它執行 `ifconfig awdl0 up` 和 `ifconfig awdl0 down`，其他什麼都不能做。不設定的話，keepalive 和釘選網路照常能用。";
-"Continue" = "繼續";
 "Not Now" = "稍後";
-"Could not finish setup" = "無法完成設定";
 "Could not change the command line tool" = "無法變更命令列工具";
 
 /* Uninstall */
 "Uninstall Hotspotly?" = "要解除安裝 Hotspotly 嗎？";
-"This removes the administrator rule, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash." = "這會移除管理員規則、命令列工具和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。";
 "Uninstall" = "解除安裝";
 "Cancel" = "取消";
 "Could not uninstall" = "無法解除安裝";
@@ -69,7 +63,6 @@
 "Uninstall…" = "移除…";
 "Log" = "記錄檔";
 "AWDL is behind AirDrop, Universal Control and Sidecar, and makes phone hotspots drop. Turned off, those stop working until you allow AirDrop from the menu." = "AirDrop、通用控制和隨航都靠 AWDL，但它會讓手機熱點斷線。關掉後這些功能會停用，需要時可從選單暫時允許 AirDrop。";
-"Needs an administrator rule" = "需要管理員規則";
 "iPhone hotspots are detected automatically. Mark others here, such as Android phones and pocket routers." = "iPhone 熱點會自動偵測。其他熱點，例如 Android 手機和行動網卡，請在這裡標記。";
 "Current network" = "目前的網路";
 "Mark as Hotspot" = "標記為熱點";
@@ -134,3 +127,21 @@
 "Reset insights?" = "要重設成效分析嗎？";
 "Reset" = "重設";
 "This clears the measurements and the list of drops." = "這會清除所有量測資料和斷線紀錄。";
+"Allow Hotspotly’s helper" = "允許 Hotspotly 的輔助程式";
+"Turning off AWDL needs administrator rights. Hotspotly’s helper does only that, forgets the networks you choose, and installs the command line tool; nothing else can use it. Turn on Hotspotly under System Settings → General → Login Items & Extensions → Allow in the Background. Keepalive and pinning work without it." = "關閉 AWDL 需要管理者權限。Hotspotly 的輔助程式只做這件事、忘記你選的網路，以及安裝命令列工具；其他程式都無法使用它。請到「系統設定 → 一般 → 登入項目與延伸功能 → 允許在背景執行」打開 Hotspotly。沒有它，keepalive 和釘選網路也照常運作。";
+"Open System Settings" = "打開系統設定";
+"Allow Hotspotly’s Helper…" = "允許 Hotspotly 的輔助程式…";
+"Allow…" = "允許…";
+"Allowed" = "已允許";
+"Waiting for your approval" = "等待你的核准";
+"Not set up" = "尚未設定";
+"Needs Hotspotly’s helper" = "需要 Hotspotly 的輔助程式";
+"This removes the helper, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash." = "這會移除輔助程式、命令列工具和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。";
+"Open Login Items…" = "打開登入項目…";
+"Location" = "定位";
+"Open Location Services…" = "打開定位服務…";
+"Only to show network names, which macOS hides from apps without location access. Hotspotly never reads your location." = "只用來顯示網路名稱，因為沒有定位權限的 app 讀不到網路名稱。Hotspotly 不會讀取你的位置。";
+"Not asked yet" = "尚未詢問";
+"Off" = "已關閉";
+"Allow in the Background" = "允許在背景執行";
+"Lets Hotspotly’s helper turn AWDL off, forget networks and install the command line tool with administrator rights. Allowed under System Settings → General → Login Items & Extensions." = "讓 Hotspotly 的輔助程式以管理者權限關閉 AWDL、忘記網路和安裝命令列工具。在「系統設定 → 一般 → 登入項目與延伸功能」允許。";

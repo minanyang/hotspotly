@@ -143,7 +143,7 @@ final class LightRow: NSView {
     }
 }
 
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUStandardUserDriverDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUStandardUserDriverDelegate, CLLocationManagerDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     /// Only used to unlock the SSID; macOS redacts it without location access.
     /// Everything else works when the user declines, because the agent identifies networks by gateway MAC.
@@ -165,8 +165,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
             self?.agent.refresh()
             self?.refreshIcon()
         }
-        model.finishSetup = { [weak self] in self?.offerSetup() }
-        model.asAdmin = { [weak self] title, work, done in self?.asAdmin(title, work, then: done) }
+        model.allowHelper = { [weak self] in self?.offerHelper() }
+        model.requestLocation = { [weak self] in self?.locationManager.requestWhenInUseAuthorization() }
         model.uninstallApp = { [weak self] in self?.uninstall() }
         model.updater = updater.updater
         model.checkForUpdates = { [weak self] in self?.checkForUpdates() }
@@ -177,6 +177,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
+        locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
         // No menu bar of its own (LSUIElement), but ⌘W should still close the Settings window.
         let appMenu = NSMenu()
@@ -186,6 +187,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         NSApp.mainMenu = NSMenu()
         NSApp.mainMenu?.addItem(appItem)
         _ = updater
+        registerHelper()
+        removeOldRule()
         // A drop that follows sleep is not the network's fault; the agent needs to know.
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: nil) {
             [agent] _ in agent.noteSleep()
@@ -194,8 +197,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         Thread { [agent] in agent.run() }.start()
         refreshIcon()
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.refreshIcon() }
-        // The rule is only needed to turn AWDL off.
-        if !Setup.isRuleInstalled && Store.loadConfig().awdlMode != .never { offerSetup() }
+        // Root is only needed to turn AWDL off.
+        if Helper.service.status != .enabled && Store.loadConfig().awdlMode != .never { offerHelper() }
         // With the icon hidden, opening the app by hand is the way to its settings; a login launch is not.
         let launch = NSAppleEventManager.shared().currentAppleEvent?.paramDescriptor(forKeyword: keyAEPropData)
         if Store.loadConfig().hideIcon && launch?.enumCodeValue != keyAELaunchedAsLogInItem { showSettings() }
@@ -212,15 +215,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         if !Net.awdlIsUp() { _ = Net.setAWDL(up: true) }
     }
 
-    func offerSetup() {
+    /// Turning AWDL off needs root, which the helper has once the user allows it under Login Items.
+    /// macOS offers no prompt for that, so this explains it and opens the right pane.
+    func offerHelper() {
+        registerHelper()
         let alert = NSAlert()
-        alert.messageText = L("Finish setting up Hotspotly")
-        alert.informativeText = L("Turning off AWDL on a hotspot needs administrator rights. Hotspotly adds a rule that lets it run only `ifconfig awdl0 up` and `ifconfig awdl0 down`, and nothing else. Keepalive and pinning work without it.")
-        alert.addButton(withTitle: L("Continue"))
+        alert.messageText = L("Allow Hotspotly’s helper")
+        alert.informativeText = L("Turning off AWDL needs administrator rights. Hotspotly’s helper does only that, forgets the networks you choose, and installs the command line tool; nothing else can use it. Turn on Hotspotly under System Settings → General → Login Items & Extensions → Allow in the Background. Keepalive and pinning work without it.")
+        alert.addButton(withTitle: L("Open System Settings"))
         alert.addButton(withTitle: L("Not Now"))
         NSApp.activate(ignoringOtherApps: true)
         guard alert.runModal() == .alertFirstButtonReturn else { return }
-        asAdmin(L("Could not finish setup"), Setup.installRule)
+        SMAppService.openSystemSettingsLoginItems()
+    }
+
+    var helperStatus = Helper.service.status
+
+    /// The user allows the helper in System Settings, so the app only learns of it by asking.
+    func checkHelper() {
+        let status = Helper.service.status
+        guard status != helperStatus else { return }
+        helperStatus = status
+        HelperClient.statusChanged()
+        Store.log("helper status \(status.rawValue)")
+        removeOldRule()
+        agent.refresh()
+        settings.model.reload()
+    }
+
+    /// Allowed or turned off in System Settings; Settings shows it.
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        settings.model.reload()
+    }
+
+    /// The helper takes over from the sudoers rule that earlier versions installed.
+    func removeOldRule() {
+        guard helperStatus == .enabled && Setup.isRuleInstalled else { return }
+        DispatchQueue.global().async {
+            Store.log(HelperClient.removeLegacyRule() == true ? "removed the old sudoers rule" : "could not remove the old sudoers rule")
+        }
     }
 
     /// Runs a Setup step off the main thread, since the administrator prompt blocks until answered.
@@ -244,6 +277,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
     }
 
     func refreshIcon() {
+        checkHelper()
         let config = Store.loadConfig()
         let status = Store.loadStatus()
         // The Hotspotly router, which is easy to tell apart from the system Wi-Fi icon next to it.
@@ -295,8 +329,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
         menu.addItem(header)
         menu.addItem(.separator())
 
-        if !Setup.isRuleInstalled && config.awdlMode != .never {
-            menu.addItem(ActionItem(L("Finish Setup…")) { [weak self] in self?.offerSetup() })
+        if helperStatus != .enabled && config.awdlMode != .never {
+            menu.addItem(ActionItem(L("Allow Hotspotly’s Helper…")) { [weak self] in self?.offerHelper() })
         }
         if let version = availableUpdate {
             menu.addItem(ActionItem(L("Update to \(version)…")) { [weak self] in self?.checkForUpdates() })
@@ -447,14 +481,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
     func uninstall() {
         let alert = NSAlert()
         alert.messageText = L("Uninstall Hotspotly?")
-        alert.informativeText = L("This removes the administrator rule, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash.")
+        alert.informativeText = L("This removes the helper, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash.")
         alert.addButton(withTitle: L("Uninstall"))
         alert.addButton(withTitle: L("Cancel"))
         NSApp.activate(ignoringOtherApps: true)
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         try? SMAppService.mainApp.unregister()
-        asAdmin(L("Could not uninstall"), { [cliPath] in try Setup.removeAll(cli: cliPath) }) {
-            NSApp.terminate(nil)
+        DispatchQueue.global().async { [cliPath] in
+            // The helper undoes what needs root, then goes with it; without it, one administrator prompt.
+            let viaHelper = HelperClient.setAWDL(up: true) != nil
+            if viaHelper {
+                _ = HelperClient.linkCLI(false)
+                _ = HelperClient.removeLegacyRule()
+            }
+            DispatchQueue.main.async {
+                try? Helper.service.unregister()
+                if viaHelper { return NSApp.terminate(nil) }
+                self.asAdmin(L("Could not uninstall"), { try Setup.removeAll(cli: cliPath) }) { NSApp.terminate(nil) }
+            }
         }
     }
 
@@ -529,6 +573,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
 
     func showSettings() {
         settings.show()
+    }
+
+    /// The helper takes over from the sudoers rule once the user allows it under Login Items.
+    func registerHelper() {
+        let service = SMAppService.daemon(plistName: Helper.plistName)
+        // .notFound too: that is what a daemon that was never registered reports.
+        if service.status == .notRegistered || service.status == .notFound {
+            do { try service.register() } catch { Store.log("helper: \(error.localizedDescription)") }
+        }
     }
 
     func checkForUpdates() {

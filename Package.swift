@@ -14,6 +14,7 @@ let package = Package(
     targets: [
         .target(name: "HotspotlyCore"),
         .executableTarget(name: "hotspotly", dependencies: ["HotspotlyCore"]),
+        .executableTarget(name: "HotspotlyHelper", dependencies: ["HotspotlyCore"]),
         .executableTarget(name: "HotspotlyBar", dependencies: ["HotspotlyCore", .product(name: "Sparkle", package: "Sparkle")]),
     ]
 )

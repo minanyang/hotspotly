@@ -201,7 +201,7 @@ public final class Agent {
                 if !awdlDownedByUs { event("awdl0 down") }
                 awdlDownedByUs = true
             } else if !awdlFailureLogged {
-                event("cannot bring awdl0 down: sudoers rule missing, choose Finish Setup in the menu")
+                event("cannot bring awdl0 down: allow Hotspotly's helper from the menu")
                 awdlFailureLogged = true
             }
         } else if awdlDownedByUs {

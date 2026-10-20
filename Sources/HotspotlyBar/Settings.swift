@@ -1,4 +1,5 @@
 import AppKit
+import CoreLocation
 import CoreWLAN
 import HotspotlyCore
 import ServiceManagement
@@ -12,15 +13,16 @@ final class SettingsModel: ObservableObject {
     @Published private(set) var ssid: String?
     @Published private(set) var openAtLogin = false
     @Published private(set) var cliLinked = false
-    @Published private(set) var ruleInstalled = false
+    @Published private(set) var helperStatus = SMAppService.Status.notRegistered
+    @Published private(set) var locationStatus = CLAuthorizationStatus.notDetermined
     @Published private(set) var networks: [NetworkRow] = []
     @Published private(set) var insights = Insights()
 
     let cliPath: String
     /// Set by the app delegate, which owns the agent and the administrator prompts.
     var configChanged: () -> Void = {}
-    var finishSetup: () -> Void = {}
-    var asAdmin: (String, @escaping () throws -> Void, @escaping () -> Void) -> Void = { _, _, _ in }
+    var allowHelper: () -> Void = {}
+    var requestLocation: () -> Void = {}
     var uninstallApp: () -> Void = {}
     var checkForUpdates: () -> Void = {}
     var updater: SPUUpdater?
@@ -53,7 +55,8 @@ final class SettingsModel: ObservableObject {
         ssid = CWWiFiClient.shared().interface()?.ssid()
         openAtLogin = SMAppService.mainApp.status == .enabled
         cliLinked = Setup.cliIsLinked(to: cliPath)
-        ruleInstalled = Setup.isRuleInstalled
+        helperStatus = Helper.service.status
+        locationStatus = CLLocationManager().authorizationStatus
     }
 
     /// Separate from `reload`, which runs after every change: a Mac can remember hundreds of networks.
@@ -71,14 +74,44 @@ final class SettingsModel: ObservableObject {
         loadInsights()
     }
 
+    var helperEnabled: Bool { helperStatus == .enabled }
+    var locationAllowed: Bool { locationStatus == .authorizedAlways }
+
+    /// macOS asks only once; after that, location access can only be turned on in System Settings.
+    func allowLocation() {
+        if locationStatus == .notDetermined { return requestLocation() }
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices")!)
+    }
+
+    /// Runs a helper call off the main thread; nil means the helper is not allowed yet.
+    func withHelper<T>(_ call: @escaping () -> T?, then done: @escaping (T) -> Void) {
+        guard helperEnabled else { return allowHelper() }
+        DispatchQueue.global().async {
+            let result = call()
+            DispatchQueue.main.async { [weak self] in
+                guard let result else { return self?.allowHelper() ?? () }
+                done(result)
+            }
+        }
+    }
+
     func forget(_ ssids: Set<String>) {
         let list = Array(ssids)
-        asAdmin(L("Could not forget the networks"), { try Setup.forget(list) }) { [weak self] in
+        withHelper({ HelperClient.forget(list) }) { [weak self] problem in
+            if !problem.isEmpty { Self.alert(L("Could not forget the networks"), problem) }
             Store.updateHistory { history in for ssid in list { history[ssid] = nil } }
             if let pin = self?.config.pin, ssids.contains(pin.ssid) { self?.update { $0.pin = nil } }
             Store.log("forgot \(list.count) network(s)")
             self?.loadNetworks()
         }
+    }
+
+    static func alert(_ title: String, _ detail: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = detail
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     func update(_ change: (inout Config) -> Void) {
@@ -89,7 +122,7 @@ final class SettingsModel: ObservableObject {
 
     func setAWDLMode(_ mode: Config.AWDLMode) {
         update { $0.awdlMode = mode }
-        if mode != .never && !ruleInstalled { finishSetup() }
+        if mode != .never && !helperEnabled { allowHelper() }
     }
 
     func setOpenAtLogin(_ on: Bool) {
@@ -102,9 +135,10 @@ final class SettingsModel: ObservableObject {
     }
 
     func toggleCLI() {
-        let path = cliPath
-        asAdmin(L("Could not change the command line tool"), cliLinked ? Setup.unlinkCLI : { try Setup.linkCLI(path) }) {
-            [weak self] in self?.reload()
+        let link = !cliLinked
+        withHelper({ HelperClient.linkCLI(link) }) { [weak self] done in
+            if !done { Self.alert(L("Could not change the command line tool"), Setup.cliLinkPath) }
+            self?.reload()
         }
     }
 
@@ -136,6 +170,34 @@ struct GeneralTab: View {
 
     var body: some View {
         Form {
+            Section {
+                // Named as in System Settings, where the user allows it.
+                LabeledContent(L("Allow in the Background")) {
+                    HStack {
+                        Image(systemName: model.helperEnabled ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                            .foregroundStyle(model.helperEnabled ? .green : .orange)
+                        Text(helperText).foregroundStyle(.secondary)
+                        // Straight to the pane: whoever clicks here already knows what it is for.
+                        Button(model.helperEnabled ? L("Open Login Items…") : L("Allow…")) {
+                            SMAppService.openSystemSettingsLoginItems()
+                        }
+                    }
+                }
+                Text(L("Lets Hotspotly’s helper turn AWDL off, forget networks and install the command line tool with administrator rights. Allowed under System Settings → General → Login Items & Extensions."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Section {
+                LabeledContent(L("Location")) {
+                    HStack {
+                        Image(systemName: model.locationAllowed ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                            .foregroundStyle(model.locationAllowed ? .green : .orange)
+                        Text(locationText).foregroundStyle(.secondary)
+                        Button(model.locationAllowed ? L("Open Location Services…") : L("Allow…"), action: model.allowLocation)
+                    }
+                }
+                Text(L("Only to show network names, which macOS hides from apps without location access. Hotspotly never reads your location."))
+                    .font(.callout).foregroundStyle(.secondary)
+            }
             Toggle(L("Open at Login"), isOn: Binding(get: { model.openAtLogin }, set: model.setOpenAtLogin))
             VStack(alignment: .leading, spacing: 2) {
                 Toggle(L("Hide Menu Bar Icon"), isOn: Binding(get: { model.config.hideIcon }, set: { on in model.update { $0.hideIcon = on } }))
@@ -156,7 +218,23 @@ struct GeneralTab: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 480, height: 300)
+        .frame(width: 480, height: 500)
+    }
+
+    var locationText: String {
+        switch model.locationStatus {
+        case .authorizedAlways: L("Allowed")
+        case .notDetermined: L("Not asked yet")
+        default: L("Off")
+        }
+    }
+
+    var helperText: String {
+        switch model.helperStatus {
+        case .enabled: L("Allowed")
+        case .requiresApproval: L("Waiting for your approval")
+        default: L("Not set up")
+        }
     }
 }
 
@@ -173,9 +251,9 @@ struct HotspotsTab: View {
                 }
                 Text(L("AWDL is behind AirDrop, Universal Control and Sidecar, and makes phone hotspots drop. Turned off, those stop working until you allow AirDrop from the menu."))
                     .font(.callout).foregroundStyle(.secondary)
-                if model.config.awdlMode != .never && !model.ruleInstalled {
-                    LabeledContent(L("Needs an administrator rule")) {
-                        Button(L("Finish Setup…"), action: model.finishSetup)
+                if model.config.awdlMode != .never && !model.helperEnabled {
+                    LabeledContent(L("Needs Hotspotly’s helper")) {
+                        Button(L("Allow…"), action: model.allowHelper)
                     }
                 }
             }
