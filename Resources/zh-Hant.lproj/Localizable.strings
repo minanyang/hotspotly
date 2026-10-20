@@ -43,6 +43,7 @@
 "Protection" = "保護";
 "Measuring…" = "量測中…";
 "No reply from the router" = "路由器沒有回應";
+"Router doesn’t answer pings" = "路由器不回應 ping";
 "no loss" = "沒有掉包";
 "%lld%% loss" = "掉包 %lld%%";
 "AWDL left on" = "AWDL 保持開啟";

@@ -387,6 +387,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
     func connectionDetail(_ status: Status) -> String {
         guard status.gateway != nil else { return "" }
         if status.gatewaySilent { return L("No reply from the router") }
+        if status.gatewayIgnoresPings { return L("Router doesn’t answer pings") }
         guard let loss = status.packetLoss, let latency = status.latencyMs else { return L("Measuring…") }
         let percent = Int((loss * 100).rounded())
         return "\(Int(latency.rounded())) ms · " + (percent == 0 ? L("no loss") : L("\(percent)% loss"))

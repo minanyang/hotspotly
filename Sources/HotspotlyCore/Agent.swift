@@ -25,6 +25,8 @@ public final class Agent {
     /// The last minute of keepalive probes, for the Connection light; cleared when the gateway changes.
     var probes: [Net.Probe] = []
     var probedGateway: String?
+    /// Some routers (planes, hotels) never answer pings; one that answered once and stopped is a dropout.
+    var gatewayAnswered = false
     /// Rounds before latency and loss are shown: one lost ping in the first round would read as 33%.
     let minRounds = 3
     var wasSilent = false
@@ -79,44 +81,52 @@ public final class Agent {
         if gateway != probedGateway {
             probes = []
             probedGateway = gateway
+            gatewayAnswered = false
         }
         let probe = gateway.map { Net.probe($0) }
         if let probe { probes = (probes + [probe]).suffix(6) }
+        if let probe, probe.received > 0 { gatewayAnswered = true }
         let mac = gateway.flatMap(Net.mac(of:))
         let onHotspot = gateway == Net.iPhoneGateway || mac.map(config.hotspotMACs.contains) == true
-        let silent = probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 }
+        // Still reachable (its MAC resolves) but never answered: pings tell nothing about this network.
+        let ignoresPings = probes.count >= 2 && !gatewayAnswered && mac != nil
+        let silent = !ignoresPings && probes.count >= 2 && probes.suffix(2).allSatisfy { $0.received == 0 }
+        let measured = ignoresPings ? nil : probe
         let ssid = Net.ssid()
-        if let probe, let ssid { record(probe, on: ssid, silent: silent) }
+        if gateway != nil, let ssid { record(measured, on: ssid, silent: silent) }
         wasSilent = silent
         // Before handleAWDL: the state the round was measured in.
-        trackInsights(network: gateway == nil ? nil : ssid ?? mac, hotspot: onHotspot, probe: probe,
+        trackInsights(network: gateway == nil ? nil : ssid ?? mac, hotspot: onHotspot, probe: measured,
                       awdlUp: Net.awdlIsUp())
 
         handleAWDL(down: config.turnsOffAWDL(onHotspot: onHotspot) && !config.paused && !config.awdlAllowed)
         let onPin = config.paused ? nil : handlePin(config.pin, currentMAC: mac)
 
-        let measured = probes.count >= minRounds
+        let enoughRounds = probes.count >= minRounds && !ignoresPings
         let sent = probes.reduce(0) { $0 + $1.sent }
         let received = probes.reduce(0) { $0 + $1.received }
         let roundTrips = probes.reduce(0.0) { $0 + ($1.averageMs ?? 0) * Double($1.received) }
         Store.saveStatus(Status(
             updated: Date(), gateway: gateway, gatewayMAC: mac, onHotspot: onHotspot,
             awdlDown: !Net.awdlIsUp(), onPin: onPin, lastEvent: lastEvent,
-            latencyMs: measured && received > 0 ? roundTrips / Double(received) : nil,
-            packetLoss: measured && sent > 0 ? 1 - Double(received) / Double(sent) : nil,
-            gatewaySilent: silent,
+            latencyMs: enoughRounds && received > 0 ? roundTrips / Double(received) : nil,
+            packetLoss: enoughRounds && sent > 0 ? 1 - Double(received) / Double(sent) : nil,
+            gatewaySilent: silent, gatewayIgnoresPings: ignoresPings,
             hotspotBytes: hotspotBytes(onHotspot: onHotspot, gateway: gateway, mac: mac),
             hotspotStartBytes: hotspotStart?.bytes))
     }
 
-    func record(_ probe: Net.Probe, on ssid: String, silent: Bool) {
+    /// `probe` is nil when the router ignores pings, so its rounds do not count as loss.
+    func record(_ probe: Net.Probe?, on ssid: String, silent: Bool) {
         let rssi = Net.rssi()
         Store.updateHistory { history in
             var entry = history[ssid] ?? NetworkRecord(lastConnected: Date())
             entry.lastConnected = Date()
-            entry.sent += probe.sent
-            entry.received += probe.received
-            entry.roundTripMs += (probe.averageMs ?? 0) * Double(probe.received)
+            if let probe {
+                entry.sent += probe.sent
+                entry.received += probe.received
+                entry.roundTripMs += (probe.averageMs ?? 0) * Double(probe.received)
+            }
             if let rssi {
                 entry.rssiSum += rssi
                 entry.rssiCount += 1

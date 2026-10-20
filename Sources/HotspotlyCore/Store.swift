@@ -69,6 +69,9 @@ public struct Status: Codable {
     public var packetLoss: Double?
     /// No reply to the last two rounds of keepalive pings.
     public var gatewaySilent = false
+    /// The router has never answered a ping on this network, though it is there; common on planes
+    /// and in hotels.
+    public var gatewayIgnoresPings = false
     /// Sent and received over Wi-Fi since joining the current hotspot; nil off a hotspot.
     public var hotspotBytes: Int64?
     /// The Wi-Fi byte count when the Mac joined the hotspot, so a restart keeps counting from there.

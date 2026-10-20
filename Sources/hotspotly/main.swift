@@ -35,7 +35,9 @@ func printStatus() {
     print("agent:    running\(config.paused ? ", paused" : "")")
     print("gateway:  \(status.gateway ?? "none") \(status.gatewayMAC.map { "(\($0))" } ?? "")")
     print("hotspot:  \(status.onHotspot ? "yes" : "no")")
-    if let loss = status.packetLoss {
+    if status.gatewayIgnoresPings {
+        print("router:   doesn't answer pings, so latency and loss can't be measured")
+    } else if let loss = status.packetLoss {
         let latency = status.latencyMs.map { "\(Int($0.rounded())) ms" } ?? "no reply"
         print("router:   \(latency), \(Int((loss * 100).rounded()))% loss over the last minute")
     }
