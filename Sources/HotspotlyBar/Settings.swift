@@ -316,8 +316,9 @@ struct NetworkRow: Identifiable {
         guard let record, let latency = record.latencyMs, let loss = record.packetLoss else { return "" }
         var parts = ["\(Int(latency.rounded())) ms", L("\(Int((loss * 100).rounded()))% loss")]
         if let rssi = record.rssi { parts.append("\(rssi) dBm") }
-        if record.dropouts == 1 { parts.append(L("1 dropout")) }
-        if record.dropouts > 1 { parts.append(L("\(record.dropouts) dropouts")) }
+        // Not disconnections, which Insights counts: the router went quiet while the Mac stayed on.
+        if record.dropouts == 1 { parts.append(L("1 no-reply spell")) }
+        if record.dropouts > 1 { parts.append(L("\(record.dropouts) no-reply spells")) }
         return parts.joined(separator: " · ")
     }
 }
