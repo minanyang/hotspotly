@@ -1,6 +1,6 @@
 # Builds without SwiftPM, so it also works with a Command Line Tools install whose
 # PackageDescription is out of sync with swiftc.
-VERSION := 0.5.0
+VERSION := 0.6.0
 APPDIR ?= /Applications
 BUILD := build
 SWIFTFLAGS := -O -swift-version 5
