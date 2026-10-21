@@ -89,6 +89,8 @@ channels several times a second. A home router copes; a phone hotspot often lags
 Turning AWDL off fixes that but stops those features, so by default Hotspotly does it only on mobile
 hotspots, and again within milliseconds whenever macOS brings it back. **Turn Off AWDL** under
 **Settings… → General** can choose all networks or never instead; quitting Hotspotly turns it back on.
+All networks also suits gaming, game streaming, video calls and remote desktop at home, where
+AWDL's channel hops show up as brief lag spikes.
 
 ## Command line
 
