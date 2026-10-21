@@ -168,7 +168,17 @@ public enum Store {
         write(Insights(), to: insightsURL)
     }
 
+    /// Set when uninstalling deletes the data, so the agent's next tick does not write it back.
+    static var stopped = false
+
+    /// Moves settings, history, insights and the log to the Trash, and writes nothing afterwards.
+    public static func trashAll() {
+        stopped = true
+        for url in [dir, logURL] { try? FileManager.default.trashItem(at: url, resultingItemURL: nil) }
+    }
+
     public static func log(_ message: String) {
+        guard !stopped else { return }
         let line = "\(ISO8601DateFormatter().string(from: Date())) \(message)\n"
         if let handle = try? FileHandle(forWritingTo: logURL) {
             handle.seekToEndOfFile()
@@ -191,7 +201,7 @@ public enum Store {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        guard let data = try? encoder.encode(value) else { return }
+        guard !stopped, let data = try? encoder.encode(value) else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         try? data.write(to: url, options: .atomic)
     }

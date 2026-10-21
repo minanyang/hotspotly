@@ -137,7 +137,10 @@
 "Allowed" = "已允許";
 "Waiting for your approval" = "等待你的核准";
 "Not set up" = "尚未設定";
-"This removes the helper, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash." = "這會移除輔助程式、命令列工具和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。";
+"This removes the helper, the command line tool and the login item, turns AWDL back on, and moves Hotspotly.app to the Trash." = "這會移除輔助程式、命令列工具和登入項目，重新打開 AWDL，並把 Hotspotly.app 移到垃圾桶。";
+"Also delete settings and history" = "同時刪除設定和紀錄";
+"Move Hotspotly to the Trash" = "請把 Hotspotly 丟到垃圾桶";
+"Everything else is removed, but Hotspotly.app could not be moved. Drag it from Applications to the Trash." = "其他項目都已移除，但無法移動 Hotspotly.app。請從「應用程式」把它拖到垃圾桶。";
 "Open Login Items…" = "打開登入項目…";
 "Location" = "定位";
 "Open Location Services…" = "打開定位服務…";

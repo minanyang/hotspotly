@@ -482,11 +482,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
     func uninstall() {
         let alert = NSAlert()
         alert.messageText = L("Uninstall Hotspotly?")
-        alert.informativeText = L("This removes the helper, the command line tool and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash.")
+        alert.informativeText = L("This removes the helper, the command line tool and the login item, turns AWDL back on, and moves Hotspotly.app to the Trash.")
         alert.addButton(withTitle: L("Uninstall"))
         alert.addButton(withTitle: L("Cancel"))
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = L("Also delete settings and history")
         NSApp.activate(ignoringOtherApps: true)
         guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let deleteData = alert.suppressionButton?.state == .on
         try? SMAppService.mainApp.unregister()
         DispatchQueue.global().async { [cliPath] in
             // The helper undoes what needs root, then goes with it; without it, one administrator prompt.
@@ -497,10 +500,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
             }
             DispatchQueue.main.async {
                 try? Helper.service.unregister()
-                if viaHelper { return NSApp.terminate(nil) }
-                self.asAdmin(L("Could not uninstall"), { try Setup.removeAll(cli: cliPath) }) { NSApp.terminate(nil) }
+                if viaHelper { return self.trashAndQuit(deleteData: deleteData) }
+                self.asAdmin(L("Could not uninstall"), { try Setup.removeAll(cli: cliPath) }) {
+                    self.trashAndQuit(deleteData: deleteData)
+                }
             }
         }
+    }
+
+    /// A running app may move its own bundle; it keeps running from the Trash until it quits.
+    func trashAndQuit(deleteData: Bool) {
+        if deleteData { Store.trashAll() }
+        do {
+            try FileManager.default.trashItem(at: Bundle.main.bundleURL, resultingItemURL: nil)
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = L("Move Hotspotly to the Trash")
+            alert.informativeText = L("Everything else is removed, but Hotspotly.app could not be moved. Drag it from Applications to the Trash.")
+            NSApp.activate(ignoringOtherApps: true)
+            alert.runModal()
+        }
+        NSApp.terminate(nil)
     }
 
     /// Same as `hotspotly pin <ssid>`: one join, and the password is saved only if it works.

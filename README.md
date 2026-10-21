@@ -132,9 +132,8 @@ The commands change the running app's settings; they need the app to be running,
 ## Uninstall
 
 Choose **Uninstall Hotspotly…** under **Settings… → General**. It removes the helper, the command line link
-and the login item, and turns AWDL back on. Then move Hotspotly.app to the Trash.
-
-Settings live in `~/Library/Application Support/hotspotly`.
+and the login item, turns AWDL back on, and moves Hotspotly.app to the Trash. Settings and history
+in `~/Library/Application Support/hotspotly` stay unless you tick **Also delete settings and history**.
 
 ## License
 

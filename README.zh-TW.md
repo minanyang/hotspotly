@@ -106,9 +106,7 @@ hotspotly run                    不開 app，在前景執行背景迴圈（開�
 
 ## 移除
 
-在「**設定… → 一般**」按「**解除安裝 Hotspotly…**」，它會移除輔助程式、命令列工具的連結和登入項目，並重新打開 AWDL。之後把 Hotspotly.app 丟到垃圾桶就好。
-
-設定檔在 `~/Library/Application Support/hotspotly`。
+在「**設定… → 一般**」按「**解除安裝 Hotspotly…**」，它會移除輔助程式、命令列工具的連結和登入項目，重新打開 AWDL，並把 Hotspotly.app 移到垃圾桶。`~/Library/Application Support/hotspotly` 裡的設定和紀錄會保留，除非你勾選「**同時刪除設定和紀錄**」。
 
 ## 授權
 
