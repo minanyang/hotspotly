@@ -149,3 +149,8 @@
 "Off" = "已關閉";
 "Allow in the Background" = "允許在背景執行";
 "Lets Hotspotly’s helper turn AWDL off, forget networks and install the command line tool with administrator rights. Allowed under System Settings → General → Login Items & Extensions." = "讓 Hotspotly 的輔助程式以管理者權限關閉 AWDL、忘記網路和安裝命令列工具。在「系統設定 → 一般 → 登入項目與延伸功能」允許。";
+"Move Hotspotly to the Applications folder?" = "要把 Hotspotly 移到「應用程式」資料夾嗎？";
+"Its helper and updates only work from Applications." = "它的輔助程式和自動更新只能在「應用程式」資料夾裡運作。";
+"Move to Applications" = "移到「應用程式」";
+"Could not move Hotspotly" = "無法移動 Hotspotly";
+"Drag Hotspotly to the Applications folder, then open it from there." = "請把 Hotspotly 拖到「應用程式」資料夾，再從那裡打開。";

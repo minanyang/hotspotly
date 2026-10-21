@@ -174,6 +174,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SPUSta
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if MoveToApplications.offerIfNeeded() { return }
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
