@@ -95,7 +95,7 @@ hotspotly allow-awdl stop        提早結束
 hotspotly run                    不開 app，在前景執行背景迴圈（開發用）
 ```
 
-除了 `run` 之外，這些指令改的是正在執行的 app 的設定，所以 app 要開著。
+除了 `run` 之外，這些指令改的是正在執行的 app 的設定，所以 app 要開著。在 macOS 26 上，切換到其他網路需要位置權限，只有 app 有，所以請從選單釘選，不要用 `hotspotly pin "<ssid>"`；`pin --here` 在命令列仍然可以用。
 
 ## 權限
 

@@ -113,11 +113,25 @@ public enum Net {
     /// Joins `ssid` and returns its gateway's MAC, or the error. It drops the current network
     /// before trying, and on failure macOS auto-join picks some network, so only run it on request.
     public static func join(_ ssid: String, password: String) -> Result<String, JoinError> {
-        let args = ["-setairportnetwork", wifiDevice, ssid] + (password.isEmpty ? [] : [password])
-        let output = sh("/usr/sbin/networksetup", args).output
-        // networksetup prints nothing on success; anything else (e.g. "Error: -3900") is a failure,
-        // even if the Mac lands on some network afterwards.
-        guard output.isEmpty else { return .failure(JoinError(message: output)) }
+        if let interface = CWWiFiClient.shared().interface(),
+           let scan = try? interface.scanForNetworks(withSSID: nil), scan.contains(where: { $0.ssid != nil }) {
+            // macOS 26 refuses `networksetup -setairportnetwork` (-3900) where CoreWLAN still joins.
+            // The scan names networks only with location access, which the menu bar app has.
+            guard let network = scan.filter({ $0.ssid == ssid }).max(by: { $0.rssiValue < $1.rssiValue }) else {
+                return .failure(JoinError(message: "Could not find network \(ssid)."))
+            }
+            do {
+                try interface.associate(to: network, password: password.isEmpty ? nil : password)
+            } catch {
+                return .failure(JoinError(message: error.localizedDescription))
+            }
+        } else {
+            let args = ["-setairportnetwork", wifiDevice, ssid] + (password.isEmpty ? [] : [password])
+            let output = sh("/usr/sbin/networksetup", args).output
+            // networksetup prints nothing on success; anything else (e.g. "Error: -3900") is a failure,
+            // even if the Mac lands on some network afterwards.
+            guard output.isEmpty else { return .failure(JoinError(message: output)) }
+        }
         for _ in 0..<20 {
             if let gateway = router(), ping(gateway), let mac = mac(of: gateway) { return .success(mac) }
             Thread.sleep(forTimeInterval: 1)

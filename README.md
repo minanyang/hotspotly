@@ -115,7 +115,9 @@ hotspotly allow-awdl stop
 hotspotly run                    run the loop in the foreground instead of the app (development)
 ```
 
-The commands change the running app's settings; they need the app to be running, except `run`.
+The commands change the running app's settings; they need the app to be running, except `run`. On
+macOS 26, switching to another network needs location access, which only the app has: pin from the
+menu instead of `hotspotly pin "<ssid>"`. `pin --here` works from the command line.
 
 ## Permissions
 
