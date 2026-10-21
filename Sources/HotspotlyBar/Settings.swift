@@ -349,7 +349,7 @@ struct NetworksTab: View {
                 selection = []
             }
         } message: {
-            Text(L("The Mac stops joining them automatically."))
+            Text(L("The Mac stops joining them automatically. With iCloud Keychain on, your other devices may forget them too."))
         }
     }
 }

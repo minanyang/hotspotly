@@ -92,7 +92,7 @@
 "Forget…" = "忘記…";
 "Forget %lld networks?" = "要忘記 %lld 個網路嗎？";
 "Forget" = "忘記";
-"The Mac stops joining them automatically." = "Mac 不會再自動連上這些網路。";
+"The Mac stops joining them automatically. With iCloud Keychain on, your other devices may forget them too." = "Mac 不會再自動連上這些網路。如果開啟了 iCloud 鑰匙圈，你的其他裝置也可能一併忘記它們。";
 "Could not forget the networks" = "無法忘記這些網路";
 "Use Password Saved on This Mac…" = "使用這台 Mac 儲存的密碼…";
 "Hide Menu Bar Icon" = "隱藏選單列圖示";
