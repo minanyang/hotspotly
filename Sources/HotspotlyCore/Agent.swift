@@ -98,8 +98,8 @@ public final class Agent {
         }
         wasSilent = silent
         // Before handleAWDL: the state the round was measured in.
-        trackInsights(network: gateway == nil ? nil : ssid ?? mac, hotspot: onHotspot, probe: measured,
-                      awdlUp: Net.awdlIsUp())
+        trackInsights(network: gateway == nil ? nil : ssid ?? mac.map(name(of:)), mac: mac, hotspot: onHotspot,
+                      probe: measured, awdlUp: Net.awdlIsUp())
 
         handleAWDL(down: config.turnsOffAWDL(onHotspot: onHotspot) && !config.paused && !config.awdlAllowed)
         let onPin = config.paused ? nil : handlePin(config.pin, currentMAC: mac)
@@ -140,14 +140,23 @@ public final class Agent {
         }
     }
 
-    func trackInsights(network: String?, hotspot: Bool, probe: Net.Probe?, awdlUp: Bool) {
+    /// macOS sometimes hides the network name for a moment, e.g. right after joining. The history
+    /// knows which network this gateway belongs to; otherwise Insights would see the MAC as another
+    /// network and count a drop each time the name comes and goes.
+    func name(of mac: String) -> String {
+        Store.loadHistory().first { $0.value.gatewayMAC == mac }?.key ?? mac
+    }
+
+    /// `mac` is the gateway's: a network first recorded under it, before macOS gave its name, is the
+    /// same network once the name appears.
+    func trackInsights(network: String?, mac: String?, hotspot: Bool, probe: Net.Probe?, awdlUp: Bool) {
         awdlLock.lock()
         let blocked = awdlBlocked, slept = lastSleep
         awdlBlocked = 0
         awdlLock.unlock()
         let now = Date()
 
-        if let last = online, network != last.network, openDrop == nil {
+        if let last = online, network != last.network, last.network != mac, openDrop == nil {
             openDrop = Drop(start: last.at, network: last.network, hotspot: last.hotspot)
         }
         var ended: (drop: Drop, awdlUp: Bool)?
@@ -176,6 +185,13 @@ public final class Agent {
                 var stats = insights.networks[ended.drop.network] ?? NetworkInsights(hotspot: ended.drop.hotspot)
                 if ended.awdlUp { stats.awdlOn.drops += 1 } else { stats.awdlOff.drops += 1 }
                 insights.networks[ended.drop.network] = stats
+            }
+            if let network, let mac, network != mac, let early = insights.networks.removeValue(forKey: mac) {
+                var stats = insights.networks[network] ?? NetworkInsights(hotspot: early.hotspot)
+                stats.awdlOn = stats.awdlOn + early.awdlOn
+                stats.awdlOff = stats.awdlOff + early.awdlOff
+                insights.networks[network] = stats
+                for i in insights.drops.indices where insights.drops[i].network == mac { insights.drops[i].network = network }
             }
             if let network, let probe {
                 var stats = insights.networks[network] ?? NetworkInsights(hotspot: hotspot)
