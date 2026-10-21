@@ -53,7 +53,7 @@ $(SPARKLE):
 # signed, and with the same identity, since the hardened runtime only loads code from its own team.
 $(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $(BUILD)/hotspotly-helper Resources/Info.plist $(wildcard Resources/*.lproj/*) \
 		Resources/AppIcon.icns $(wildcard Resources/*.pdf) Resources/Hotspotly.entitlements \
-		Resources/io.github.minanyang.hotspotly.helper.plist
+		Resources/io.github.minanyang.hotspotly.helper.plist $(BUILD)/signed-with
 	rm -r -f $@
 	mkdir -p $@/Contents/MacOS $@/Contents/Resources
 	mkdir -p $@/Contents/Library/LaunchDaemons
@@ -71,6 +71,15 @@ $(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $(BUILD)/hotspotly-helper Resou
 	$(SIGN) $@/Contents/MacOS/hotspotly
 	$(SIGN) --identifier io.github.minanyang.hotspotly.helper $@/Contents/MacOS/hotspotly-helper
 	$(SIGN) --entitlements Resources/Hotspotly.entitlements $@
+
+# Changes only when SIGN_IDENTITY does, so an ad-hoc build is never installed as a signed one: the
+# helper rejects an app without the team ID. The app goes too, since make 3.81 compares whole
+# seconds and a quick rebuild can share one with this file.
+$(BUILD)/signed-with: FORCE
+	@mkdir -p $(BUILD)
+	@echo '$(SIGN_IDENTITY)' | cmp -s - $@ || { echo '$(SIGN_IDENTITY)' > $@; rm -r -f $(APP); }
+
+FORCE:
 
 app: $(APP)
 
