@@ -1,8 +1,8 @@
 # Template for the minanyang/homebrew-tap repository; copy it to Casks/hotspotly.rb there.
 # Fill in version and sha256 for each release.
 cask "hotspotly" do
-  version "0.5.0"
-  sha256 "REPLACE_WITH_RELEASE_SHA256"
+  version "0.6.0"
+  sha256 "e42b0e7634d8b8189c5a012bb3fe79771e2bd1f509f55304412f680dd686df75"
 
   url "https://github.com/minanyang/hotspotly/releases/download/v#{version}/Hotspotly.zip"
   name "Hotspotly"

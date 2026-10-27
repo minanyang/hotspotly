@@ -28,7 +28,7 @@ Hotspotly is a menu bar app for Macs that live on a phone's hotspot.
 - **Shows whether it helps**, comparing your networks with AWDL off and on.
 - **Updates itself**: signed, notarized, and updated from inside the app.
 
-iPhone hotspots are recognised automatically; Android phones and pocket routers can be marked by
+iPhone hotspots are recognized automatically; Android phones and pocket routers can be marked by
 hand. The interface is in English or Traditional Chinese, following the system.
 
 ## Install
@@ -141,7 +141,7 @@ in `~/Library/Application Support/hotspotly` stay unless you tick **Also delete 
 
 ## License
 
-The code is released under the [MIT License](LICENSE). In-app updates use
+Hotspotly is released under the [MIT License](LICENSE). In-app updates use
 [Sparkle](https://sparkle-project.org) (MIT License); its license ships in the app as `Sparkle-LICENSE`.
 
 The Hotspotly name and logo are not covered by the MIT License. The logo artwork

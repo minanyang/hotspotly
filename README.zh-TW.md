@@ -110,6 +110,6 @@ hotspotly run                    不開 app，在前景執行背景迴圈（開�
 
 ## 授權
 
-程式碼以 [MIT License](LICENSE) 授權。App 內更新使用 [Sparkle](https://sparkle-project.org)（MIT License），它的授權條款以 `Sparkle-LICENSE` 隨 app 一起提供。
+Hotspotly 以 [MIT License](LICENSE) 授權釋出。App 內更新使用 [Sparkle](https://sparkle-project.org)（MIT License），它的授權條款以 `Sparkle-LICENSE` 隨 app 一起提供。
 
 Hotspotly 的名稱和 logo 不在 MIT License 的授權範圍內。logo 圖檔（`Resources/AppIcon.icns`、`Resources/MenuBarIcon.pdf`、`Resources/MenuBarIconFilled.pdf`、`docs/icon.png`）以及繪製 logo 的 script（`scripts/make-icons.swift`）© 2026 Min-An Yang (minanyang)，保留所有權利。fork 和衍生作品必須使用不同的名稱和 logo；註明「基於 Hotspotly」則沒有問題。
