@@ -31,7 +31,7 @@ iPhone 熱點會自動辨識；Android 手機和行動網卡可以手動標記�
 
 ## 安裝
 
-需要 macOS 13（Ventura）或更新版本。
+需要 Apple 晶片的 Mac，以及 macOS 13（Ventura）或更新版本。
 
 1. 下載 [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip)，解壓縮後把 **Hotspotly** 拖進「應用程式」。
 2. 打開它，依提示在「**登入項目與延伸功能 → 允許在背景執行**」允許輔助程式（原因見[權限](#權限)）；位置權限也請允許，才能顯示網路名稱。

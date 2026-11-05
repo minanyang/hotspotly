@@ -9,6 +9,7 @@ cask "hotspotly" do
   desc "Keeps your Mac steady on your phone's hotspot and on Wi-Fi"
   homepage "https://github.com/minanyang/hotspotly"
 
+  depends_on arch: :arm64
   depends_on macos: ">= :ventura"
   # Sparkle updates the app in place.
   auto_updates true

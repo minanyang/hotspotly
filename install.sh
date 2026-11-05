@@ -3,6 +3,12 @@
 #   curl -fsSL https://raw.githubusercontent.com/minanyang/hotspotly/main/install.sh | bash
 set -euo pipefail
 
+# Not `uname -m`, which says x86_64 in a shell running under Rosetta.
+if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" != 1 ]; then
+  echo "Hotspotly needs a Mac with Apple silicon." >&2
+  exit 1
+fi
+
 REPO=${REPO:-minanyang/hotspotly}
 DEST=/Applications
 [ -w "$DEST" ] || DEST="$HOME/Applications"

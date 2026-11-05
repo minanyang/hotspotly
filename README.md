@@ -33,7 +33,7 @@ hand. The interface is in English or Traditional Chinese, following the system.
 
 ## Install
 
-Requires macOS 13 (Ventura) or later.
+Requires macOS 13 (Ventura) or later on an Apple silicon Mac.
 
 1. Download [Hotspotly.zip](https://github.com/minanyang/hotspotly/releases/latest/download/Hotspotly.zip),
    unzip it, and drag **Hotspotly** to Applications.
