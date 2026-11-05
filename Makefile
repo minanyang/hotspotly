@@ -1,4 +1,4 @@
-VERSION := 0.6.0
+VERSION := 0.6.1
 APPDIR ?= /Applications
 BUILD := build
 # SwiftPM output; Package.swift declares the targets and pins Sparkle.

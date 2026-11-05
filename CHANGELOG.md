@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 — 2026-11-05
 
 - **Runs on macOS 13 again.** 0.6.0 was built for macOS 26 only, although it asked for macOS 13. The
   app is now built with Swift Package Manager, which targets the macOS 13 the app declares.
+- **Apple silicon only, now stated.** Hotspotly has always been built for Apple silicon; the README
+  and Homebrew cask now say so, and the install script stops on an Intel Mac instead of installing
+  an app that cannot open.
 
 ## 0.6.0 — 2026-10-22
 
