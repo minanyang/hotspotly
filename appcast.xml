@@ -4,23 +4,16 @@
     <title>Hotspotly</title>
     <link>https://github.com/minanyang/hotspotly</link>
     <item>
-      <title>Hotspotly 0.6.0</title>
-      <pubDate>Wed, 21 Oct 2026 22:06:28 +0000</pubDate>
-      <sparkle:version>0.6.0</sparkle:version>
-      <sparkle:shortVersionString>0.6.0</sparkle:shortVersionString>
+      <title>Hotspotly 0.6.1</title>
+      <pubDate>Thu, 05 Nov 2026 18:43:28 +0000</pubDate>
+      <sparkle:version>0.6.1</sparkle:version>
+      <sparkle:shortVersionString>0.6.1</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
-      <sparkle:fullReleaseNotesLink>https://github.com/minanyang/hotspotly/releases/tag/v0.6.0</sparkle:fullReleaseNotesLink>
+      <sparkle:fullReleaseNotesLink>https://github.com/minanyang/hotspotly/releases/tag/v0.6.1</sparkle:fullReleaseNotesLink>
       <description><![CDATA[<ul>
-<li><b>Insights.</b> Settings… → Insights compares latency, packet loss and drops with AWDL off and on, lists recent drops with their cause, and counts what Hotspotly did.</li>
-<li><b>A helper instead of the sudoers rule.</b> Allow it once under System Settings → General → Login Items &amp; Extensions; after that nothing asks for a password.</li>
-<li><b>Permissions at a glance</b> in Settings… → General, with buttons to the right place in System Settings.</li>
-<li><b>Mobile hotspots in the Networks tab:</b> a Type column, and Mark as Mobile Hotspot for the selection. Turn Off AWDL moved to General.</li>
-<li><b>Pinning works on macOS 26</b> again, joining through CoreWLAN.</li>
-<li><b>Move to Applications</b> when opened from Downloads, and <b>Uninstall</b> now trashes the app.</li>
-<li><b>Routers that ignore pings</b>, common on planes and in hotels, no longer show a red light.</li>
-</ul>
-<p>After updating, choose <b>Allow Hotspotly’s Helper…</b> in the menu.</p>]]></description>
-      <enclosure url="https://github.com/minanyang/hotspotly/releases/download/v0.6.0/Hotspotly.zip" type="application/octet-stream" sparkle:edSignature="AzbOPJTadTDVO7CXEC4IK2YXOvGbdGBPkHR14YWISOPgPvMDEMBj027EA0jLaWFEfXopzPsAgfTGpBAL9SDbAw==" length="1699853"/>
+<li><b>Runs on macOS 13 again.</b> 0.6.0 opened only on macOS 26. Nothing else changes.</li>
+</ul>]]></description>
+      <enclosure url="https://github.com/minanyang/hotspotly/releases/download/v0.6.1/Hotspotly.zip" type="application/octet-stream" sparkle:edSignature="LWh2nJ9wR/TlVoRUuwP0eAFdd//vsNvrGxly9eA2pNYZugMDwuJhVUT+P5M63Of2ybMgKmuYE0TNmz3LrFm4DQ==" length="1843854"/>
     </item>
   </channel>
 </rss>
