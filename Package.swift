@@ -15,6 +15,8 @@ let package = Package(
         .target(name: "HotspotlyCore"),
         .executableTarget(name: "hotspotly", dependencies: ["HotspotlyCore"]),
         .executableTarget(name: "HotspotlyHelper", dependencies: ["HotspotlyCore"]),
-        .executableTarget(name: "HotspotlyBar", dependencies: ["HotspotlyCore", .product(name: "Sparkle", package: "Sparkle")]),
+        // Sparkle.framework ships in Hotspotly.app/Contents/Frameworks.
+        .executableTarget(name: "HotspotlyBar", dependencies: ["HotspotlyCore", .product(name: "Sparkle", package: "Sparkle")],
+                          linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]),
     ]
 )

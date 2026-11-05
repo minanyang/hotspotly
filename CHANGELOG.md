@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Runs on macOS 13 again.** 0.6.0 was built for macOS 26 only, although it asked for macOS 13. The
+  app is now built with Swift Package Manager, which targets the macOS 13 the app declares.
+
 ## 0.6.0 — 2026-10-22
 
 - **Insights.** **Settings… → Insights** shows whether Hotspotly helps on your networks. It compares

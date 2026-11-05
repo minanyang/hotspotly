@@ -3,5 +3,4 @@
 *.app
 *.pkg
 build/
-vendor/
 .DS_Store

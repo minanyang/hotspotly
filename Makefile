@@ -1,10 +1,8 @@
-# Builds without SwiftPM, so it also works with a Command Line Tools install whose
-# PackageDescription is out of sync with swiftc.
 VERSION := 0.6.0
 APPDIR ?= /Applications
 BUILD := build
-SWIFTFLAGS := -O -swift-version 5
-CORE := $(wildcard Sources/HotspotlyCore/*.swift)
+# SwiftPM output; Package.swift declares the targets and pins Sparkle.
+BIN := .build/release
 APP := $(BUILD)/Hotspotly.app
 ZIP := $(BUILD)/Hotspotly.zip
 # "-" signs ad-hoc, for development. Releases set it to the "Developer ID Application: …" identity
@@ -16,53 +14,35 @@ SIGN_IDENTITY ?= -
 SIGN := codesign --force $(if $(filter -,$(SIGN_IDENTITY)),,--options runtime --timestamp) --sign "$(SIGN_IDENTITY)"
 # Saved once with `xcrun notarytool store-credentials hotspotly`.
 NOTARY_PROFILE ?= hotspotly
-# Sparkle (MIT) does the in-app updates. Downloaded once and checked against the release checksum.
-SPARKLE_VERSION := 2.10.0
-SPARKLE_SHA256 := c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c
-SPARKLE := vendor/Sparkle-$(SPARKLE_VERSION)
+# Sparkle (MIT) does the in-app updates. SwiftPM fetches it, with its tools, into .build/artifacts.
+SPARKLE := .build/artifacts/sparkle/Sparkle
+SPARKLE_FRAMEWORK := $(SPARKLE)/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework
 # The EdDSA key that signs updates, in the login keychain; made with `generate_keys --account hotspotly`.
 SPARKLE_ACCOUNT := hotspotly
 
 all: $(APP)
 
-$(BUILD)/libHotspotlyCore.a: $(CORE)
+# SwiftPM rebuilds only what changed; the stamp lets make skip it when no source did.
+$(BUILD)/swift-build: Package.swift Package.resolved $(wildcard Sources/*/*.swift)
 	@mkdir -p $(BUILD)
-	swiftc $(SWIFTFLAGS) -parse-as-library -emit-library -static -emit-module \
-		-module-name HotspotlyCore -emit-module-path $(BUILD)/HotspotlyCore.swiftmodule \
-		-o $@ $(CORE)
-
-$(BUILD)/hotspotly: Sources/hotspotly/main.swift $(BUILD)/libHotspotlyCore.a
-	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $<
-
-$(BUILD)/HotspotlyBar: $(wildcard Sources/HotspotlyBar/*.swift) $(BUILD)/libHotspotlyCore.a | $(SPARKLE)
-	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -F $(SPARKLE) -framework Sparkle \
-		-Xlinker -rpath -Xlinker @executable_path/../Frameworks -o $@ $(wildcard Sources/HotspotlyBar/*.swift)
-
-# The privileged helper that Hotspotly.app registers with launchd (SMAppService).
-$(BUILD)/hotspotly-helper: Sources/HotspotlyHelper/main.swift $(BUILD)/libHotspotlyCore.a
-	swiftc $(SWIFTFLAGS) -I $(BUILD) -L $(BUILD) -lHotspotlyCore -o $@ $<
-
-$(SPARKLE):
-	mkdir -p $@
-	curl -fsSL -o $@.tar.xz https://github.com/sparkle-project/Sparkle/releases/download/$(SPARKLE_VERSION)/Sparkle-$(SPARKLE_VERSION).tar.xz
-	echo "$(SPARKLE_SHA256)  $@.tar.xz" | shasum -a 256 -c -
-	tar -xJf $@.tar.xz -C $@
-	rm $@.tar.xz
+	swift build -c release
+	@touch $@
 
 # The CLI and Sparkle ship inside the app; they are signed first since codesign wants nested code
 # signed, and with the same identity, since the hardened runtime only loads code from its own team.
-$(APP): $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $(BUILD)/hotspotly-helper Resources/Info.plist $(wildcard Resources/*.lproj/*) \
+$(APP): $(BUILD)/swift-build Resources/Info.plist $(wildcard Resources/*.lproj/*) \
 		Resources/AppIcon.icns $(wildcard Resources/*.pdf) Resources/Hotspotly.entitlements \
 		Resources/io.github.minanyang.hotspotly.helper.plist $(BUILD)/signed-with
 	rm -r -f $@
 	mkdir -p $@/Contents/MacOS $@/Contents/Resources
 	mkdir -p $@/Contents/Library/LaunchDaemons
-	cp $(BUILD)/HotspotlyBar $(BUILD)/hotspotly $(BUILD)/hotspotly-helper $@/Contents/MacOS/
+	cp $(BIN)/HotspotlyBar $(BIN)/hotspotly $@/Contents/MacOS/
+	cp $(BIN)/HotspotlyHelper $@/Contents/MacOS/hotspotly-helper
 	cp Resources/io.github.minanyang.hotspotly.helper.plist $@/Contents/Library/LaunchDaemons/
 	cp -R Resources/*.lproj Resources/AppIcon.icns Resources/*.pdf $@/Contents/Resources/
 	cp $(SPARKLE)/LICENSE $@/Contents/Resources/Sparkle-LICENSE
 	sed 's/__VERSION__/$(VERSION)/' Resources/Info.plist > $@/Contents/Info.plist
-	ditto $(SPARKLE)/Sparkle.framework $@/Contents/Frameworks/Sparkle.framework
+	ditto $(SPARKLE_FRAMEWORK) $@/Contents/Frameworks/Sparkle.framework
 	# Only sandboxed apps need Sparkle's XPC services.
 	rm -r -f $@/Contents/Frameworks/Sparkle.framework/XPCServices $@/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices
 	$(SIGN) $@/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate
@@ -105,7 +85,7 @@ notarize: $(ZIP)
 # Signs the zip with the Sparkle key and writes appcast.xml, which installed copies read to find
 # updates. NOTES is an optional HTML fragment for the update window. Commit and push appcast.xml
 # only after the zip is on the GitHub release.
-appcast: | $(SPARKLE)
+appcast:
 	test -f $(ZIP)
 	scripts/make-appcast.sh $(VERSION) "$$($(SPARKLE)/bin/sign_update --account $(SPARKLE_ACCOUNT) $(ZIP))" $(NOTES) > appcast.xml
 
@@ -124,6 +104,6 @@ icons:
 	$(BUILD)/make-icons .
 
 clean:
-	rm -r -f $(BUILD)
+	rm -r -f $(BUILD) $(BIN)
 
 .PHONY: all app install zip notarize appcast release icons clean
